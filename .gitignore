@@ -36,6 +36,8 @@ mem.txt
 avd.txt
 git.txt
 procs.txt
+diag.txt
+tela-info.txt
 
 # ------------------------------------------------------------------- IDE
 .idea/
