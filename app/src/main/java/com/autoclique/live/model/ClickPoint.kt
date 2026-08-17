@@ -11,6 +11,8 @@ import java.util.UUID
  */
 data class ClickPoint(
     val id: String = UUID.randomUUID().toString(),
+    /** A qual bot este ponto pertence. */
+    var botId: String = "",
     var name: String = "Ponto",
     var x: Int = 0,
     var y: Int = 0,
@@ -33,6 +35,7 @@ data class ClickPoint(
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
+        put("botId", botId)
         put("name", name)
         put("x", x)
         put("y", y)
@@ -50,6 +53,7 @@ data class ClickPoint(
     companion object {
         fun fromJson(o: JSONObject): ClickPoint = ClickPoint(
             id = o.optString("id", UUID.randomUUID().toString()),
+            botId = o.optString("botId", ""),
             name = o.optString("name", "Ponto"),
             x = o.optInt("x", 0),
             y = o.optInt("y", 0),

@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.autoclique.live.databinding.ItemPointBinding
 import com.autoclique.live.model.ClickPoint
+import com.autoclique.live.util.Tempo
 
 class PointAdapter(
     private val onToggle: (ClickPoint, Boolean) -> Unit,
@@ -31,8 +32,8 @@ class PointAdapter(
 
         b.tvName.text = p.name
         b.tvDetails.text = buildString {
-            append("x ").append(p.x).append(", y ").append(p.y)
-            append("  •  a cada ").append(p.intervalMs).append(" ms")
+            append(Tempo.resumo(p.intervalMs))
+            append("  •  x ").append(p.x).append(", y ").append(p.y)
             if (p.useColor) {
                 append("  •  cor ").append(hex(p.targetColor))
                 append(" (tol. ").append(p.tolerance).append("%)")

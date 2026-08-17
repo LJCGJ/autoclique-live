@@ -39,8 +39,10 @@ android {
         applicationId = "com.autoclique.live"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Editaveis em gradle.properties. A Play exige um versionCode MAIOR a
+        // cada envio — subir esse numero e o passo que mais se esquece.
+        versionCode = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = (project.findProperty("appVersionName") as String?) ?: "1.0"
     }
 
     buildFeatures {
@@ -98,4 +100,6 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    testImplementation("junit:junit:4.13.2")
 }

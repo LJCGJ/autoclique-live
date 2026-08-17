@@ -29,6 +29,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Divulgacao proeminente: primeira tela quando ainda nao ha consentimento. -->
+        <activity
+            android:name=".ui.DisclosureActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|density" />
+
         <activity
             android:name=".capture.ProjectionRequestActivity"
             android:exported="false"

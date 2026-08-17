@@ -2,7 +2,8 @@
 #  AutoClique Live - compila, instala no emulador e abre o app
 #  Uso:  no VS Code aperte Ctrl+Shift+B
 #        ou no terminal:  .\run.ps1
-#  Opcoes:  .\run.ps1 -Logs        (abre o logcat depois de instalar)
+#  Opcoes:  .\run.ps1 -Bundle      (gera o .aab para enviar a Play Store)
+#           .\run.ps1 -Logs        (abre o logcat depois de instalar)
 #           .\run.ps1 -Clean       (limpa caches antes de compilar)
 #           .\run.ps1 -Release     (instala a versao release assinada)
 # =====================================================================
@@ -11,6 +12,7 @@ param(
     [switch]$Logs,
     [switch]$Clean,
     [switch]$Release,
+    [switch]$Bundle,
     [string]$Avd = ""
 )
 
@@ -208,7 +210,10 @@ Info "Memoria livre: $livre MB"
 # --------------------------------------------------------------- compilar
 # assembleXxx nao precisa de aparelho conectado: da para compilar com o
 # emulador desligado e so depois ligar para instalar.
-$task = if ($Release) { "assembleRelease" } else { "assembleDebug" }
+# -Bundle gera o .aab exigido pela Play Store (APK a loja nao aceita mais).
+$task = "assembleDebug"
+if ($Release) { $task = "assembleRelease" }
+if ($Bundle)  { $task = "bundleRelease" }
 $logBuild = Join-Path $proj "build-ultimo.log"
 
 # No Windows, a extensao Java/Gradle do VS Code (e as vezes o antivirus) segura
@@ -295,11 +300,22 @@ if (-not $ok) {
 
 if (-not $ok) { Fail "A compilacao falhou. O erro esta acima (log completo em build-ultimo.log)." }
 
-$apkRel = if ($Release) {
-    "app\build\outputs\apk\release\app-release.apk"
-} else {
-    "app\build\outputs\apk\debug\app-debug.apk"
+# O AAB nao se instala num aparelho: e um formato de envio para a loja.
+# Entao, com -Bundle, o trabalho termina aqui.
+if ($Bundle) {
+    $aabRel = "app\build\outputs\bundle\release\app-release.aab"
+    $aab = Join-Path $proj $aabRel
+    if (-not (Test-Path $aab)) { Fail "O build terminou mas nao achei o AAB em $aabRel" }
+    $mb = [math]::Round((Get-Item $aab).Length / 1MB, 2)
+    Ok "AAB gerado: $aabRel  ($mb MB)"
+    Write-Host ""
+    Write-Host "Envie este arquivo no Play Console, em Teste fechado > Criar versao." -ForegroundColor Cyan
+    Write-Host "Lembre de subir o appVersionCode no gradle.properties antes do proximo envio." -ForegroundColor Yellow
+    exit 0
 }
+
+$apkRel = "app\build\outputs\apk\debug\app-debug.apk"
+if ($Release) { $apkRel = "app\build\outputs\apk\release\app-release.apk" }
 $apk = Join-Path $proj $apkRel
 if (-not (Test-Path $apk)) { Fail "O build terminou mas nao achei o APK em $apkRel" }
 Ok "APK gerado: $apkRel"
@@ -382,6 +398,12 @@ if ($serial -like "emulator-*") {
     & $adb -s $serial shell settings put global verifier_verify_adb_installs 0 2>&1 | Out-Null
     & $adb -s $serial shell settings put global package_verifier_enable 0 2>&1 | Out-Null
     Ok "Verificacao de instalacao desligada (somente neste emulador)"
+
+    # Por padrao o Android esconde o teclado da tela quando existe teclado
+    # fisico (hw.keyboard=yes no AVD). Com isto ligado valem os dois: digitar
+    # pelo teclado do PC e tambem clicar nas teclas da tela.
+    & $adb -s $serial shell settings put secure show_ime_with_hard_keyboard 1 2>&1 | Out-Null
+    Ok "Teclado da tela liberado junto com o teclado fisico"
 }
 
 # -------------------------------------------------------------- instalar

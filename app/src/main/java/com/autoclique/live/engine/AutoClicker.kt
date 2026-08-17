@@ -76,9 +76,11 @@ object AutoClicker {
         PointStore.init(app)
         if (_running.value) return
 
-        val active = PointStore.points.value.filter { it.enabled }
+        // So o bot selecionado roda: pontos dos outros bots ficam parados.
+        val active = PointStore.pontosAtivos()
         if (active.isEmpty()) {
-            say("Nenhum ponto ativo. Adicione ou ligue um ponto primeiro.")
+            val nome = PointStore.botAtual()?.name ?: "bot"
+            say("O bot \"$nome\" nao tem nenhum ponto ligado.")
             return
         }
         if (!Perms.isAccessibilityEnabled(app)) {
@@ -147,9 +149,8 @@ object AutoClicker {
                     }
                 }
 
-                for (p in PointStore.points.value) {
+                for (p in PointStore.pontosAtivos()) {
                     if (!coroutineContext.isActive) break
-                    if (!p.enabled) continue
                     if (now < (nextDue[p.id] ?: 0L)) continue
 
                     // Ponto marcado em outra orientação/resolução: clicar aqui acertaria

@@ -60,7 +60,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:autofillHints=""
-            android:inputType="number" />
+            android:hint="@string/field_interval_hint"
+            android:inputType="numberDecimal" />
+
+        <TextView
+            android:id="@+id/tvTaxa"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -135,7 +144,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:autofillHints=""
-                android:inputType="number" />
+                android:hint="@string/field_poll_hint"
+                android:inputType="numberDecimal" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
