@@ -1,0 +1,47 @@
+# ============================ NUNCA VERSIONAR ============================
+# A chave de assinatura e a senha dela. Se forem para um repositorio
+# publico, qualquer pessoa pode assinar um APK se passando por este app.
+autoclique.jks
+*.jks
+*.keystore
+keystore.properties
+# =========================================================================
+
+# ---------------------------------------------------------------- Gradle
+.gradle/
+build/
+app/build/
+# Pastas que o run.ps1 renomeia quando nao consegue apaga-las.
+app/build.travado-*
+.kotlin/
+captures/
+
+# Aponta para o SDK desta maquina — o run.ps1 regenera sozinho.
+local.properties
+
+# ------------------------------------------------------------------ JDK
+# O run.ps1 baixa um Temurin 21 aqui quando nao acha um JDK 17-21
+# instalado. Sao ~190 MB e milhares de arquivos: nunca versionar.
+.jdk/
+.jdk-path.txt
+
+# --------------------------------------------------- logs de diagnostico
+# Gerados pelos scripts com "*> arquivo.txt". Descartaveis.
+build-log.txt
+build-ultimo.log
+perms-log.txt
+pkg.txt
+ram.txt
+mem.txt
+avd.txt
+git.txt
+procs.txt
+
+# ------------------------------------------------------------------- IDE
+.idea/
+*.iml
+*.hprof
+
+# ------------------------------------------------------------------- SO
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1 @@
+-keep class com.autoclique.live.service.ClickAccessibilityService { *; }

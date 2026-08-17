@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AutoClique Live</string>
+    <string name="accessibility_label">AutoClique Live — toques automáticos</string>
+    <string name="accessibility_description">Permite que o AutoClique Live toque na tela nos pontos que você marcou. Nenhuma informação da tela é lida ou enviada para fora do aparelho.</string>
+
+    <string name="perm_title">Permissões necessárias</string>
+    <string name="perm_accessibility">Acessibilidade (para tocar na tela)</string>
+    <string name="perm_overlay">Sobrepor outros apps (botão flutuante)</string>
+    <string name="perm_notification">Notificações (serviço em segundo plano)</string>
+    <string name="perm_capture">Captura de tela (gatilho por cor)</string>
+
+    <string name="grant">Conceder</string>
+    <string name="granted">OK</string>
+
+    <string name="points_title">Pontos de clique</string>
+    <string name="add_point">Adicionar ponto</string>
+    <string name="empty_points">Nenhum ponto ainda.\nToque em “Adicionar ponto”, arraste a mira até o botão de resgatar e confirme.</string>
+
+    <string name="start">Iniciar</string>
+    <string name="stop">Parar</string>
+
+    <string name="picker_hint">Arraste a mira até o botão</string>
+    <string name="pick_color">Gravar cor</string>
+    <string name="confirm">Confirmar</string>
+    <string name="cancel">Cancelar</string>
+
+    <string name="editor_title">Configurar ponto</string>
+    <string name="field_name">Nome do ponto</string>
+    <string name="field_interval">Intervalo entre cliques (ms)</string>
+    <string name="field_duration">Duração do toque (ms)</string>
+    <string name="field_poll">Verificar a cor a cada (ms)</string>
+    <string name="use_color">Só clicar quando a cor bater</string>
+    <string name="field_tolerance">Tolerância de cor</string>
+    <string name="save">Salvar</string>
+    <string name="delete">Excluir</string>
+    <string name="remark">Remarcar posição</string>
+
+    <string name="channel_overlay_name">Serviço do clicador</string>
+    <string name="channel_capture_name">Leitura de cor da tela</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand">#FF6D3BF5</color>
+    <color name="brand_dim">#FF8E6BF7</color>
+    <color name="on_brand">#FFFFFFFF</color>
+    <color name="running">#FF19B562</color>
+    <color name="idle">#FF6D3BF5</color>
+    <color name="scrim">#66000000</color>
+    <color name="ic_launcher_background">#FF1B1032</color>
+</resources>
