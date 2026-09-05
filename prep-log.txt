@@ -1,0 +1,22 @@
+=== preparacao do video === 
+1
+app ja instalado 
+limpando dados para mostrar tela de consentimento... 
+Success
+abrindo o app... 
+  bash arg: -p
+  bash arg: com.autoclique.live
+  bash arg: -c
+  bash arg: android.intent.category.LAUNCHER
+  bash arg: 1
+args: [-p, com.autoclique.live, -c, android.intent.category.LAUNCHER, 1]
+ arg: "-p"
+ arg: "com.autoclique.live"
+ arg: "-c"
+ arg: "android.intent.category.LAUNCHER"
+ arg: "1"
+data="com.autoclique.live"
+data="android.intent.category.LAUNCHER"
+Events injected: 1
+## Network stats: elapsed time=1973ms (0ms mobile, 0ms wifi, 1973ms not connected)
+pronto 
