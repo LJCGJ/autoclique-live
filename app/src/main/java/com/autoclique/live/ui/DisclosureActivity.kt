@@ -4,10 +4,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.autoclique.live.R
 import com.autoclique.live.databinding.ActivityDisclosureBinding
 import com.autoclique.live.util.Consent
+import com.autoclique.live.util.Insets
 
 /**
  * Divulgação proeminente exigida pela política de uso da AccessibilityService.
@@ -24,8 +26,10 @@ class DisclosureActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         b = ActivityDisclosureBinding.inflate(layoutInflater)
         setContentView(b.root)
+        Insets.apply(b.root, b.header)
 
         b.btnPolitica.setOnClickListener {
             val url = getString(R.string.privacy_policy_url)

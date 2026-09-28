@@ -2,6 +2,7 @@ package com.autoclique.live.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.autoclique.live.R
 import com.autoclique.live.model.Bot
 import com.autoclique.live.model.ClickPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,9 @@ object PointStore {
 
     private var prefs: SharedPreferences? = null
 
+    /** Só para traduzir os nomes padrão ("Meu primeiro bot", "Ponto 1"). */
+    private var app: Context? = null
+
     private val _points = MutableStateFlow<List<ClickPoint>>(emptyList())
     val points: StateFlow<List<ClickPoint>> = _points.asStateFlow()
 
@@ -36,6 +40,7 @@ object PointStore {
     @Synchronized
     fun init(context: Context) {
         if (prefs != null) return
+        app = context.applicationContext
         prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
         _points.value = lerPontos()
@@ -56,7 +61,7 @@ object PointStore {
         var mudou = false
 
         if (bots.isEmpty()) {
-            bots = listOf(Bot(name = "Meu primeiro bot"))
+            bots = listOf(Bot(name = nomePadraoBot()))
             mudou = true
         }
 
@@ -117,7 +122,7 @@ object PointStore {
 
     @Synchronized
     fun criarBot(nome: String): Bot {
-        val bot = Bot(name = nome.ifBlank { "Novo bot" })
+        val bot = Bot(name = nome.ifBlank { app?.getString(R.string.bot_new_name) ?: "New bot" })
         val lista = _bots.value + bot
         _bots.value = lista
         gravarBots(lista)
@@ -137,7 +142,7 @@ object PointStore {
     @Synchronized
     fun excluirBot(id: String) {
         val restantes = _bots.value.filterNot { it.id == id }
-        val lista = restantes.ifEmpty { listOf(Bot(name = "Meu primeiro bot")) }
+        val lista = restantes.ifEmpty { listOf(Bot(name = nomePadraoBot())) }
         _bots.value = lista
         gravarBots(lista)
 
@@ -188,5 +193,10 @@ object PointStore {
 
     fun find(id: String?): ClickPoint? = _points.value.firstOrNull { it.id == id }
 
-    fun suggestName(): String = "Ponto ${pontosDoBot().size + 1}"
+    fun suggestName(): String {
+        val n = pontosDoBot().size + 1
+        return app?.getString(R.string.point_default_name, n) ?: "Point $n"
+    }
+
+    private fun nomePadraoBot(): String = app?.getString(R.string.bot_default_name) ?: "My first bot"
 }

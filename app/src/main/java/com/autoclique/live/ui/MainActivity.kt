@@ -15,6 +15,7 @@ import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
@@ -32,6 +33,7 @@ import com.autoclique.live.engine.AutoClicker
 import com.autoclique.live.model.ClickPoint
 import com.autoclique.live.service.OverlayService
 import com.autoclique.live.util.Consent
+import com.autoclique.live.util.Insets
 import com.autoclique.live.util.Perms
 import com.autoclique.live.util.Tempo
 import kotlinx.coroutines.flow.combine
@@ -68,8 +70,10 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        enableEdgeToEdge()
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
+        Insets.apply(b.root, b.header)
 
         PointStore.init(this)
 
@@ -106,7 +110,7 @@ class MainActivity : AppCompatActivity() {
         b.btnBotNovo.setOnClickListener {
             pedirNome(getString(R.string.bot_criar_titulo), "") { nome ->
                 PointStore.criarBot(nome)
-                toast("Bot “$nome” criado. Adicione os pontos dele.")
+                toast(getString(R.string.bot_criado, nome))
             }
         }
 
@@ -197,13 +201,13 @@ class MainActivity : AppCompatActivity() {
                 launch {
                     AutoClicker.running.collect { running ->
                         b.btnToggle.text = getString(if (running) R.string.stop else R.string.start)
-                        b.tvStatus.text = if (running) "Clicando…" else "Parado"
+                        b.tvStatus.text = getString(if (running) R.string.status_clicking else R.string.status_stopped)
                     }
                 }
                 launch { AutoClicker.messages.collect { toast(it) } }
                 launch {
                     AutoClicker.clickCount.collect { n ->
-                        if (AutoClicker.running.value) b.tvStatus.text = "Clicando — $n toque(s)"
+                        if (AutoClicker.running.value) b.tvStatus.text = getString(R.string.status_clicking_count, n)
                     }
                 }
             }
@@ -241,10 +245,7 @@ class MainActivity : AppCompatActivity() {
     // ----------------------------------------------------------- permissões
 
     private fun configurarPermissoes() {
-        b.btnPermAccessibility.setOnClickListener {
-            toast("Encontre “AutoClique Live” na lista e ative.")
-            startActivity(Perms.accessibilitySettingsIntent())
-        }
+        b.btnPermAccessibility.setOnClickListener { explicarAcessibilidade() }
         b.btnPermOverlay.setOnClickListener { startActivity(Perms.overlaySettingsIntent(this)) }
         b.btnPermNotification.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -259,6 +260,24 @@ class MainActivity : AppCompatActivity() {
                 ProjectionRequestActivity.request(this, autoStart = false)
             }
         }
+    }
+
+    /**
+     * Passo a passo antes de abrir as configurações do sistema. Testadores
+     * confundiam o serviço do app com o TalkBack e não achavam o AutoClique na
+     * lista — a explicação vem antes, não num toast que some em 2 s.
+     */
+    private fun explicarAcessibilidade() {
+        // getText (e não getString) preserva o <b> do recurso.
+        AlertDialog.Builder(this)
+            .setTitle(R.string.a11y_help_title)
+            .setMessage(getText(R.string.a11y_help_body))
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.a11y_help_open) { _, _ ->
+                toast(getString(R.string.msg_find_in_list))
+                startActivity(Perms.accessibilitySettingsIntent())
+            }
+            .show()
     }
 
     private fun refreshPermissions() {
@@ -278,13 +297,13 @@ class MainActivity : AppCompatActivity() {
     /** Abre a mira em tela cheia e manda o app para segundo plano. */
     private fun launchPicker(pointId: String?) {
         if (!Perms.canDrawOverlays(this)) {
-            toast("Primeiro permita “sobrepor outros apps”.")
+            toast(getString(R.string.msg_overlay_first))
             startActivity(Perms.overlaySettingsIntent(this))
             return
         }
         OverlayService.ensureRunning(this)
         OverlayService.showPicker(this, pointId)
-        toast("Abra o app alvo, arraste a mira até o botão e confirme.")
+        toast(getString(R.string.msg_open_target))
         moveTaskToBack(true)
     }
 
@@ -295,19 +314,19 @@ class MainActivity : AppCompatActivity() {
         d.etInterval.setText(Tempo.msParaSegundos(point.intervalMs))
         d.etDuration.setText(point.tapDurationMs.toString())
         d.etPoll.setText(Tempo.msParaSegundos(point.pollMs))
-        d.tvCoords.text = "Posição: x ${point.x}, y ${point.y}"
+        d.tvCoords.text = getString(R.string.editor_position, point.x, point.y)
         d.cbColor.isChecked = point.useColor
         d.sbTolerance.progress = point.tolerance
         d.colorBox.visibility = if (point.useColor) View.VISIBLE else View.GONE
         d.vColor.paintSwatch(point.targetColor)
-        d.tvColor.text = if (point.useColor) "Cor gravada: ${hex(point.targetColor)}"
-        else "Nenhuma cor gravada — use “Remarcar posição”."
-        d.tvTolerance.text = "${getString(R.string.field_tolerance)}: ${point.tolerance}%"
+        d.tvColor.text = if (point.useColor) getString(R.string.editor_color_saved, hex(point.targetColor))
+        else getString(R.string.editor_color_none)
+        d.tvTolerance.text = getString(R.string.tolerance_value, getString(R.string.field_tolerance), point.tolerance)
 
         // Taxa de cliques recalculada a cada tecla digitada.
         fun atualizarTaxa() {
             val ms = Tempo.segundosParaMs(d.etInterval.text.toString())
-            d.tvTaxa.text = if (ms == null) "—" else Tempo.cliquesPorSegundo(ms)
+            d.tvTaxa.text = if (ms == null) "—" else Tempo.cliquesPorSegundo(this, ms)
         }
         atualizarTaxa()
         d.etInterval.addTextChangedListener(object : TextWatcher {
@@ -321,7 +340,7 @@ class MainActivity : AppCompatActivity() {
         }
         d.sbTolerance.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, value: Int, fromUser: Boolean) {
-                d.tvTolerance.text = "${getString(R.string.field_tolerance)}: $value%"
+                d.tvTolerance.text = getString(R.string.tolerance_value, getString(R.string.field_tolerance), value)
             }
 
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -340,7 +359,7 @@ class MainActivity : AppCompatActivity() {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val intervalo = Tempo.segundosParaMs(d.etInterval.text.toString())
                 if (intervalo == null) {
-                    toast("Informe o intervalo em segundos, por exemplo 1 ou 0,5.")
+                    toast(getString(R.string.editor_interval_invalid))
                     return@setOnClickListener
                 }
                 val updated = point.copy(

@@ -114,7 +114,7 @@ class CaptureService : Service() {
         val n: Notification = NotificationCompat.Builder(this, Notifs.CHANNEL_CAPTURE)
             .setSmallIcon(R.drawable.ic_stat_click)
             .setContentTitle(getString(R.string.app_name))
-            .setContentText("Lendo a cor da tela para o gatilho de cor")
+            .setContentText(getString(R.string.notif_capture))
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setContentIntent(open)

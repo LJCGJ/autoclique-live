@@ -3,6 +3,7 @@ package com.autoclique.live.ui
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.autoclique.live.R
 import com.autoclique.live.databinding.ItemPointBinding
 import com.autoclique.live.model.ClickPoint
 import com.autoclique.live.util.Tempo
@@ -31,12 +32,12 @@ class PointAdapter(
         val b = holder.b
 
         b.tvName.text = p.name
+        val ctx = b.root.context
         b.tvDetails.text = buildString {
-            append(Tempo.resumo(p.intervalMs))
+            append(Tempo.resumo(ctx, p.intervalMs))
             append("  •  x ").append(p.x).append(", y ").append(p.y)
             if (p.useColor) {
-                append("  •  cor ").append(hex(p.targetColor))
-                append(" (tol. ").append(p.tolerance).append("%)")
+                append("  •  ").append(ctx.getString(R.string.detail_color, hex(p.targetColor), p.tolerance))
             }
         }
 

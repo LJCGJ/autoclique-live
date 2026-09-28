@@ -5,17 +5,18 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/brand"
         android:orientation="vertical"
         android:paddingStart="20dp"
-        android:paddingTop="40dp"
+        android:paddingTop="16dp"
         android:paddingEnd="20dp"
         android:paddingBottom="20dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
             android:textColor="#FFFFFFFF"
@@ -113,14 +114,16 @@
             android:id="@+id/btnRecusar"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
             android:layout_weight="1"
             android:text="@string/disc_recusar" />
 
         <Button
             android:id="@+id/btnAceitar"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
             android:layout_marginStart="12dp"
             android:layout_weight="1.4"
             android:text="@string/disc_aceitar"

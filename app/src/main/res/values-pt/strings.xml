@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Português (Brasil). O idioma padrão (inglês) fica em values/strings.xml. -->
+<resources>
+    <string name="app_name">AutoClique Live</string>
+    <string name="accessibility_label">AutoClique Live — toques automáticos</string>
+    <string name="accessibility_description">Permite que o AutoClique Live toque na tela nos pontos que você marcou. Nenhuma informação da tela é lida ou enviada para fora do aparelho.</string>
+
+    <!-- ================= Divulgação proeminente (política do Google) ================= -->
+    <string name="disc_header">Antes de começar, leia como o app funciona</string>
+
+    <string name="disc_intro">O AutoClique Live toca na tela por você, nos pontos e nos intervalos que você mesmo configurar. Ele segue apenas o que você definiu: não decide nada sozinho, não aprende e não muda de comportamento por conta própria.\n\nPara isso, ele precisa de duas permissões sensíveis. Aqui está exatamente o que cada uma faz.</string>
+
+    <string name="disc_a11y_titulo">1. Serviço de Acessibilidade</string>
+    <string name="disc_a11y_corpo">É a única forma no Android de um app tocar na tela de outro aplicativo. O AutoClique Live a utiliza <b>somente para executar toques</b> nas coordenadas que você marcou.\n\nEle não lê textos, botões, senhas nem qualquer conteúdo das telas que você usa. O serviço ignora todos os eventos de acessibilidade que o sistema envia.</string>
+
+    <string name="disc_captura_titulo">2. Captura de tela (opcional)</string>
+    <string name="disc_captura_corpo">Usada apenas se você ativar o recurso <b>“Só clicar quando a cor bater”</b> em algum ponto. Nesse caso o app lê a cor dos pixels naquela coordenada, para saber se o botão que você quer já apareceu.\n\nNenhuma imagem é gravada, exibida ou guardada. Só o valor da cor daquele ponto é comparado, na memória, e descartado em seguida. Se você não usar o gatilho por cor, essa permissão nunca é solicitada.</string>
+
+    <string name="disc_nao_titulo">O que o app não faz</string>
+    <string name="disc_nao_corpo">• Não coleta, armazena nem compartilha dados pessoais.\n• Não envia nada para a internet: o app não pede permissão de rede, então não tem como transmitir informação alguma.\n• Não exibe anúncios e não usa ferramentas de análise.\n• Suas configurações (pontos, intervalos e cores) ficam apenas neste aparelho e são apagadas ao desinstalar.</string>
+
+    <string name="disc_ver_politica">Ler a política de privacidade</string>
+    <string name="disc_recusar">Recusar</string>
+    <string name="disc_aceitar">Aceito e quero continuar</string>
+
+    <!-- ================================ Tela principal ================================ -->
+    <string name="status_stopped">Parado</string>
+    <string name="status_clicking">Clicando…</string>
+    <string name="status_clicking_count">Clicando — %1$d toque(s)</string>
+
+    <string name="perm_title">Permissões necessárias</string>
+    <string name="perm_accessibility">Acessibilidade (para tocar na tela)</string>
+    <string name="perm_overlay">Sobrepor outros apps (botão flutuante)</string>
+    <string name="perm_notification">Notificações (serviço em segundo plano)</string>
+    <string name="perm_capture">Captura de tela (gatilho por cor)</string>
+
+    <string name="grant">Conceder</string>
+    <string name="granted">OK</string>
+
+    <string name="a11y_help_title">Como ativar a permissão de Acessibilidade</string>
+    <string name="a11y_help_body">O Android vai abrir as configurações de Acessibilidade. Faça assim:\n\n1. Procure <b>AutoClique Live</b> na lista. Em alguns celulares ele fica em “Apps instalados” ou “Apps baixados”.\n2. Toque nele e <b>ative</b> a chave.\n3. Confirme o aviso do Android e volte para cá.\n\nEsse é o serviço do próprio AutoClique, não o TalkBack nem o leitor de tela — não precisa ligar esses. O serviço só executa os toques que você configurou; ele não lê a tela.\n\nPara pausar tudo rapidamente, use a notificação ou o botão flutuante.</string>
+    <string name="a11y_help_open">Abrir configurações</string>
+
+    <string name="bot_label">Bot selecionado</string>
+    <string name="bot_novo">+ Novo</string>
+    <string name="bot_renomear">Renomear</string>
+    <string name="bot_excluir">Excluir</string>
+    <string name="bot_nome_hint">Nome do bot (ex: Shopee moedas)</string>
+    <string name="bot_criar_titulo">Novo bot</string>
+    <string name="bot_renomear_titulo">Renomear bot</string>
+    <string name="bot_excluir_titulo">Excluir bot</string>
+    <string name="bot_excluir_msg">Excluir o bot “%1$s” e os %2$d ponto(s) dele? Isso não pode ser desfeito.</string>
+    <string name="bot_criado">Bot “%1$s” criado. Adicione os pontos dele.</string>
+    <string name="bot_default_name">Meu primeiro bot</string>
+    <string name="bot_new_name">Novo bot</string>
+    <string name="point_default_name">Ponto %1$d</string>
+
+    <string name="points_title">Pontos deste bot</string>
+    <string name="add_point">Adicionar ponto</string>
+    <string name="empty_points">Este bot ainda não tem pontos.\nToque em “Adicionar ponto”, arraste a mira até o botão de resgatar e confirme.</string>
+    <string name="edit">Editar</string>
+
+    <string name="start">Iniciar</string>
+    <string name="stop">Parar</string>
+
+    <string name="picker_hint">Arraste a mira até o botão</string>
+    <string name="pick_color">Gravar cor</string>
+    <string name="confirm">Confirmar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="picker_coords">x: %1$d   y: %2$d</string>
+
+    <string name="editor_title">Configurar ponto</string>
+    <string name="field_name">Nome do ponto</string>
+    <string name="field_interval">Intervalo entre cliques, em segundos</string>
+    <string name="field_interval_hint">ex: 1  ou  0,5  ou  30</string>
+    <string name="field_duration">Duração do toque (ms) — 40 costuma bastar</string>
+    <string name="field_poll">Verificar a cor a cada, em segundos</string>
+    <string name="field_poll_hint">ex: 0,25</string>
+    <string name="use_color">Só clicar quando a cor bater</string>
+    <string name="field_tolerance">Tolerância de cor</string>
+    <string name="tolerance_value">%1$s: %2$d%%</string>
+    <string name="save">Salvar</string>
+    <string name="delete">Excluir</string>
+    <string name="remark">Remarcar posição</string>
+    <string name="editor_position">Posição: x %1$d, y %2$d</string>
+    <string name="editor_color_saved">Cor gravada: %1$s</string>
+    <string name="editor_color_none">Nenhuma cor gravada — use “Remarcar posição”.</string>
+    <string name="editor_interval_invalid">Informe o intervalo em segundos, por exemplo 1 ou 0,5.</string>
+
+    <string name="detail_every">a cada %1$s s  -  %2$s/s</string>
+    <string name="detail_color">cor %1$s (tol. %2$d%%)</string>
+    <string name="rate_per_second">%1$s cliques por segundo</string>
+    <string name="rate_per_second_one">%1$s clique por segundo</string>
+
+    <string name="msg_find_in_list">Encontre “AutoClique Live” na lista e ative.</string>
+    <string name="msg_overlay_first">Primeiro permita “sobrepor outros apps”.</string>
+    <string name="msg_open_target">Abra o app alvo, arraste a mira até o botão e confirme.</string>
+    <string name="msg_bot_no_points">O bot “%1$s” não tem nenhum ponto ligado.</string>
+    <string name="msg_need_accessibility">Ative a Acessibilidade do AutoClique Live para ele conseguir tocar na tela.</string>
+    <string name="msg_need_overlay">Permita “sobrepor outros apps” para o botão flutuante.</string>
+    <string name="msg_need_capture">Autorize a captura de tela — ela é usada só para conferir a cor do botão.</string>
+    <string name="msg_started">Clicador ligado.</string>
+    <string name="msg_stopped">Clicador parado.</string>
+    <string name="msg_a11y_off">O serviço de acessibilidade foi desligado. Clicador parado.</string>
+    <string name="msg_rotated">Tela girou: pontos pausados até voltar à orientação original.</string>
+    <string name="msg_bubble_moved">Movi a bolha para não cobrir um ponto de clique.</string>
+    <string name="msg_bubble_over_point">Atenção: a bolha está sobre um ponto de clique. Arraste-a para outro lugar.</string>
+    <string name="msg_overlay_for_points">Permita “sobrepor outros apps” para marcar pontos.</string>
+    <string name="msg_capture_then_color">Autorize a captura de tela e toque em “Gravar cor” de novo.</string>
+    <string name="msg_read_failed">Não consegui ler a tela agora. Tente de novo.</string>
+    <string name="msg_color_saved">Cor gravada.</string>
+
+    <string name="notif_running">Clicando — %1$d toque(s) até agora</string>
+    <string name="notif_idle">Parado — toque na bolha para iniciar</string>
+    <string name="notif_close">Encerrar</string>
+    <string name="notif_capture">Lendo a cor da tela para o gatilho de cor</string>
+
+    <string name="channel_overlay_name">Serviço do clicador</string>
+    <string name="channel_capture_name">Leitura de cor da tela</string>
+</resources>

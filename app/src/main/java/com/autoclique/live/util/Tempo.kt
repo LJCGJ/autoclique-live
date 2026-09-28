@@ -1,5 +1,7 @@
 package com.autoclique.live.util
 
+import android.content.Context
+import com.autoclique.live.R
 import java.util.Locale
 
 /**
@@ -11,7 +13,8 @@ import java.util.Locale
  */
 object Tempo {
 
-    private val BR = Locale("pt", "BR")
+    /** Separador decimal do idioma do aparelho ("1,5" em pt-BR, "1.5" em inglês). */
+    private val locale: Locale get() = Locale.getDefault()
 
     /** Intervalo mínimo aceito: 50 ms, ou seja 20 cliques por segundo. */
     const val MIN_MS = 50L
@@ -30,31 +33,32 @@ object Tempo {
         return if (segundos == segundos.toLong().toDouble()) {
             segundos.toLong().toString()
         } else {
-            String.format(BR, "%.2f", segundos).trimEnd('0').trimEnd(',')
+            String.format(locale, "%.2f", segundos).trimEnd('0').trimEnd(',').trimEnd('.')
         }
     }
 
     /** "a cada 1,5 s" -> "0,67 clique/s". Texto pronto para exibir. */
-    fun cliquesPorSegundo(ms: Long): String {
+    fun cliquesPorSegundo(ctx: Context, ms: Long): String {
         if (ms <= 0L) return ""
         val taxa = 1000.0 / ms
         val numero = formatarTaxa(taxa)
-        val unidade = if (taxa == 1.0) "clique" else "cliques"
-        return "$numero $unidade por segundo"
+        return ctx.getString(
+            if (taxa == 1.0) R.string.rate_per_second_one else R.string.rate_per_second, numero
+        )
     }
 
     /** Versão curta para a lista: "a cada 1,5 s  -  0,67/s". */
-    fun resumo(ms: Long): String {
+    fun resumo(ctx: Context, ms: Long): String {
         val taxa = if (ms > 0) 1000.0 / ms else 0.0
-        return "a cada ${msParaSegundos(ms)} s  -  ${formatarTaxa(taxa)}/s"
+        return ctx.getString(R.string.detail_every, msParaSegundos(ms), formatarTaxa(taxa))
     }
 
     /** Sem casa decimal quando é número redondo: "1", "2", "1,5", "0,67". */
     private fun formatarTaxa(taxa: Double): String = when {
-        taxa >= 10 -> String.format(BR, "%.0f", taxa)
+        taxa >= 10 -> String.format(locale, "%.0f", taxa)
         taxa >= 1 ->
-            if (taxa == Math.floor(taxa)) String.format(BR, "%.0f", taxa)
-            else String.format(BR, "%.1f", taxa)
-        else -> String.format(BR, "%.2f", taxa)
+            if (taxa == Math.floor(taxa)) String.format(locale, "%.0f", taxa)
+            else String.format(locale, "%.1f", taxa)
+        else -> String.format(locale, "%.2f", taxa)
     }
 }

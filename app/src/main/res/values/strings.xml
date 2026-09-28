@@ -1,74 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default language: English. Brazilian Portuguese lives in values-pt/strings.xml.
+  Every user-facing text must be here (and there) — no hardcoded strings in code.
+-->
 <resources>
     <string name="app_name">AutoClique Live</string>
-    <string name="accessibility_label">AutoClique Live — toques automáticos</string>
-    <string name="accessibility_description">Permite que o AutoClique Live toque na tela nos pontos que você marcou. Nenhuma informação da tela é lida ou enviada para fora do aparelho.</string>
+    <string name="accessibility_label">AutoClique Live — automatic taps</string>
+    <string name="accessibility_description">Lets AutoClique Live tap the screen at the points you marked. No screen content is read or sent off the device.</string>
 
-    <!-- ================= Divulgação proeminente (política do Google) ================= -->
-    <string name="privacy_policy_url">https://ljcgj.github.io/autoclique-live/privacidade.html</string>
+    <!-- ================= Prominent disclosure (Google policy) ================= -->
+    <string name="privacy_policy_url" translatable="false">https://ljcgj.github.io/autoclique-live/privacidade.html</string>
 
-    <string name="disc_header">Antes de começar, leia como o app funciona</string>
+    <string name="disc_header">Before you start, read how the app works</string>
 
-    <string name="disc_intro">O AutoClique Live toca na tela por você, nos pontos e nos intervalos que você mesmo configurar. Ele segue apenas o que você definiu: não decide nada sozinho, não aprende e não muda de comportamento por conta própria.\n\nPara isso, ele precisa de duas permissões sensíveis. Aqui está exatamente o que cada uma faz.</string>
+    <string name="disc_intro">AutoClique Live taps the screen for you, at the points and intervals you configure yourself. It only follows what you set up: it makes no decisions on its own, does not learn and does not change its behavior by itself.\n\nTo do that it needs two sensitive permissions. Here is exactly what each one does.</string>
 
-    <string name="disc_a11y_titulo">1. Serviço de Acessibilidade</string>
-    <string name="disc_a11y_corpo">É a única forma no Android de um app tocar na tela de outro aplicativo. O AutoClique Live a utiliza <b>somente para executar toques</b> nas coordenadas que você marcou.\n\nEle não lê textos, botões, senhas nem qualquer conteúdo das telas que você usa. O serviço ignora todos os eventos de acessibilidade que o sistema envia.</string>
+    <string name="disc_a11y_titulo">1. Accessibility Service</string>
+    <string name="disc_a11y_corpo">It is the only way on Android for an app to tap the screen of another app. AutoClique Live uses it <b>only to perform taps</b> at the coordinates you marked.\n\nIt does not read text, buttons, passwords or any content of the screens you use. The service ignores every accessibility event the system sends.</string>
 
-    <string name="disc_captura_titulo">2. Captura de tela (opcional)</string>
-    <string name="disc_captura_corpo">Usada apenas se você ativar o recurso <b>“Só clicar quando a cor bater”</b> em algum ponto. Nesse caso o app lê a cor dos pixels naquela coordenada, para saber se o botão que você quer já apareceu.\n\nNenhuma imagem é gravada, exibida ou guardada. Só o valor da cor daquele ponto é comparado, na memória, e descartado em seguida. Se você não usar o gatilho por cor, essa permissão nunca é solicitada.</string>
+    <string name="disc_captura_titulo">2. Screen capture (optional)</string>
+    <string name="disc_captura_corpo">Used only if you enable <b>“Tap only when the color matches”</b> on a point. In that case the app reads the pixel color at that coordinate to know whether the button you want has appeared.\n\nNo image is recorded, displayed or stored. Only the color value at that point is compared, in memory, and discarded right after. If you don\'t use the color trigger, this permission is never requested.</string>
 
-    <string name="disc_nao_titulo">O que o app não faz</string>
-    <string name="disc_nao_corpo">• Não coleta, armazena nem compartilha dados pessoais.\n• Não envia nada para a internet: o app não pede permissão de rede, então não tem como transmitir informação alguma.\n• Não exibe anúncios e não usa ferramentas de análise.\n• Suas configurações (pontos, intervalos e cores) ficam apenas neste aparelho e são apagadas ao desinstalar.</string>
+    <string name="disc_nao_titulo">What the app does not do</string>
+    <string name="disc_nao_corpo">• Does not collect, store or share personal data.\n• Sends nothing to the internet: the app does not request network permission, so it has no way to transmit anything.\n• Shows no ads and uses no analytics tools.\n• Your settings (points, intervals and colors) stay on this device only and are deleted when you uninstall.</string>
 
-    <string name="disc_ver_politica">Ler a política de privacidade</string>
-    <string name="disc_recusar">Recusar</string>
-    <string name="disc_aceitar">Aceito e quero continuar</string>
+    <string name="disc_ver_politica">Read the privacy policy</string>
+    <string name="disc_recusar">Decline</string>
+    <string name="disc_aceitar">I accept and want to continue</string>
 
-    <!-- ================================ Tela principal ================================ -->
-    <string name="perm_title">Permissões necessárias</string>
-    <string name="perm_accessibility">Acessibilidade (para tocar na tela)</string>
-    <string name="perm_overlay">Sobrepor outros apps (botão flutuante)</string>
-    <string name="perm_notification">Notificações (serviço em segundo plano)</string>
-    <string name="perm_capture">Captura de tela (gatilho por cor)</string>
+    <!-- ================================ Main screen ================================ -->
+    <string name="status_stopped">Stopped</string>
+    <string name="status_clicking">Tapping…</string>
+    <string name="status_clicking_count">Tapping — %1$d tap(s)</string>
 
-    <string name="grant">Conceder</string>
+    <string name="perm_title">Required permissions</string>
+    <string name="perm_accessibility">Accessibility (to tap the screen)</string>
+    <string name="perm_overlay">Draw over other apps (floating button)</string>
+    <string name="perm_notification">Notifications (background service)</string>
+    <string name="perm_capture">Screen capture (color trigger)</string>
+
+    <string name="grant">Grant</string>
     <string name="granted">OK</string>
 
-    <string name="bot_label">Bot selecionado</string>
-    <string name="bot_novo">+ Novo</string>
-    <string name="bot_renomear">Renomear</string>
-    <string name="bot_excluir">Excluir</string>
-    <string name="bot_nome_hint">Nome do bot (ex: Shopee moedas)</string>
-    <string name="bot_criar_titulo">Novo bot</string>
-    <string name="bot_renomear_titulo">Renomear bot</string>
-    <string name="bot_excluir_titulo">Excluir bot</string>
-    <string name="bot_excluir_msg">Excluir o bot “%1$s” e os %2$d ponto(s) dele? Isso não pode ser desfeito.</string>
+    <!-- Step-by-step help shown before opening the Accessibility settings -->
+    <string name="a11y_help_title">How to enable the Accessibility permission</string>
+    <string name="a11y_help_body">Android will open the Accessibility settings. Do this:\n\n1. Find <b>AutoClique Live</b> in the list. On some phones it is under “Installed apps” or “Downloaded apps”.\n2. Tap it and switch it <b>on</b>.\n3. Confirm the warning Android shows and come back here.\n\nThis is AutoClique\'s own service, not TalkBack or the screen reader — you don\'t need to turn those on. The service only performs the taps you configured; it does not read the screen.\n\nTo pause everything quickly, use the notification or the floating button.</string>
+    <string name="a11y_help_open">Open settings</string>
 
-    <string name="points_title">Pontos deste bot</string>
-    <string name="add_point">Adicionar ponto</string>
-    <string name="empty_points">Este bot ainda não tem pontos.\nToque em “Adicionar ponto”, arraste a mira até o botão de resgatar e confirme.</string>
+    <string name="bot_label">Selected bot</string>
+    <string name="bot_novo">+ New</string>
+    <string name="bot_renomear">Rename</string>
+    <string name="bot_excluir">Delete</string>
+    <string name="bot_nome_hint">Bot name (e.g. Shopee coins)</string>
+    <string name="bot_criar_titulo">New bot</string>
+    <string name="bot_renomear_titulo">Rename bot</string>
+    <string name="bot_excluir_titulo">Delete bot</string>
+    <string name="bot_excluir_msg">Delete the bot “%1$s” and its %2$d point(s)? This cannot be undone.</string>
+    <string name="bot_criado">Bot “%1$s” created. Add its points.</string>
+    <string name="bot_default_name">My first bot</string>
+    <string name="bot_new_name">New bot</string>
+    <string name="point_default_name">Point %1$d</string>
 
-    <string name="start">Iniciar</string>
-    <string name="stop">Parar</string>
+    <string name="points_title">Points of this bot</string>
+    <string name="add_point">Add point</string>
+    <string name="empty_points">This bot has no points yet.\nTap “Add point”, drag the crosshair onto the claim button and confirm.</string>
+    <string name="edit">Edit</string>
 
-    <string name="picker_hint">Arraste a mira até o botão</string>
-    <string name="pick_color">Gravar cor</string>
-    <string name="confirm">Confirmar</string>
-    <string name="cancel">Cancelar</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
 
-    <string name="editor_title">Configurar ponto</string>
-    <string name="field_name">Nome do ponto</string>
-    <string name="field_interval">Intervalo entre cliques, em segundos</string>
-    <string name="field_interval_hint">ex: 1  ou  0,5  ou  30</string>
-    <string name="field_duration">Duração do toque (ms) — 40 costuma bastar</string>
-    <string name="field_poll">Verificar a cor a cada, em segundos</string>
-    <string name="field_poll_hint">ex: 0,25</string>
-    <string name="use_color">Só clicar quando a cor bater</string>
-    <string name="field_tolerance">Tolerância de cor</string>
-    <string name="save">Salvar</string>
-    <string name="delete">Excluir</string>
-    <string name="remark">Remarcar posição</string>
+    <string name="picker_hint">Drag the crosshair onto the button</string>
+    <string name="pick_color">Save color</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="picker_coords">x: %1$d   y: %2$d</string>
 
-    <string name="channel_overlay_name">Serviço do clicador</string>
-    <string name="channel_capture_name">Leitura de cor da tela</string>
+    <string name="editor_title">Point settings</string>
+    <string name="field_name">Point name</string>
+    <string name="field_interval">Interval between taps, in seconds</string>
+    <string name="field_interval_hint">e.g. 1  or  0.5  or  30</string>
+    <string name="field_duration">Tap duration (ms) — 40 is usually enough</string>
+    <string name="field_poll">Check the color every, in seconds</string>
+    <string name="field_poll_hint">e.g. 0.25</string>
+    <string name="use_color">Tap only when the color matches</string>
+    <string name="field_tolerance">Color tolerance</string>
+    <string name="tolerance_value">%1$s: %2$d%%</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="remark">Re-mark position</string>
+    <string name="editor_position">Position: x %1$d, y %2$d</string>
+    <string name="editor_color_saved">Saved color: %1$s</string>
+    <string name="editor_color_none">No color saved — use “Re-mark position”.</string>
+    <string name="editor_interval_invalid">Enter the interval in seconds, for example 1 or 0.5.</string>
+
+    <!-- List item details -->
+    <string name="detail_every">every %1$s s  -  %2$s/s</string>
+    <string name="detail_color">color %1$s (tol. %2$d%%)</string>
+    <string name="rate_per_second">%1$s taps per second</string>
+    <string name="rate_per_second_one">%1$s tap per second</string>
+
+    <!-- Toasts / engine messages -->
+    <string name="msg_find_in_list">Find “AutoClique Live” in the list and turn it on.</string>
+    <string name="msg_overlay_first">First allow “draw over other apps”.</string>
+    <string name="msg_open_target">Open the target app, drag the crosshair onto the button and confirm.</string>
+    <string name="msg_bot_no_points">The bot “%1$s” has no enabled points.</string>
+    <string name="msg_need_accessibility">Turn on AutoClique Live\'s Accessibility service so it can tap the screen.</string>
+    <string name="msg_need_overlay">Allow “draw over other apps” for the floating button.</string>
+    <string name="msg_need_capture">Allow screen capture — it is used only to check the button color.</string>
+    <string name="msg_started">Clicker on.</string>
+    <string name="msg_stopped">Clicker stopped.</string>
+    <string name="msg_a11y_off">The accessibility service was turned off. Clicker stopped.</string>
+    <string name="msg_rotated">Screen rotated: points paused until you return to the original orientation.</string>
+    <string name="msg_bubble_moved">Moved the bubble so it doesn\'t cover a tap point.</string>
+    <string name="msg_bubble_over_point">Warning: the bubble is over a tap point. Drag it somewhere else.</string>
+    <string name="msg_overlay_for_points">Allow “draw over other apps” to mark points.</string>
+    <string name="msg_capture_then_color">Allow screen capture and tap “Save color” again.</string>
+    <string name="msg_read_failed">Couldn\'t read the screen right now. Try again.</string>
+    <string name="msg_color_saved">Color saved.</string>
+
+    <!-- Notifications -->
+    <string name="notif_running">Tapping — %1$d tap(s) so far</string>
+    <string name="notif_idle">Stopped — tap the bubble to start</string>
+    <string name="notif_close">Close</string>
+    <string name="notif_capture">Reading the screen color for the color trigger</string>
+
+    <string name="channel_overlay_name">Clicker service</string>
+    <string name="channel_capture_name">Screen color reading</string>
 </resources>

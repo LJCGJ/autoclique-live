@@ -12,9 +12,9 @@ O diferencial: cada ponto pode ter um **gatilho por cor**. Em vez de tocar no va
 2. Abra o arquivo. O Android vai pedir para permitir a instalação de apps de fontes desconhecidas — autorize para o gerenciador de arquivos que você usou.
 3. Instale e abra.
 
-O APK é assinado com uma chave própria (`autoclique.jks`, senha `autoclique`). Guarde esse arquivo: sem ele você não consegue publicar atualizações por cima desta instalação.
+O APK é assinado com uma chave própria (`autoclique.jks`, fora do repositório). Guarde esse arquivo e a senha em local seguro: sem eles você não consegue publicar atualizações por cima desta instalação.
 
-**Requisitos:** Android 8.0 (API 26) ou superior.
+**Requisitos:** Android 8.0 (API 26) ou superior. Interface em inglês e português (segue o idioma do aparelho).
 
 ---
 

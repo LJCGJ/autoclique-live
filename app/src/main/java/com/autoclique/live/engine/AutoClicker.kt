@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.os.SystemClock
 import android.util.Log
+import com.autoclique.live.R
 import com.autoclique.live.capture.ProjectionRequestActivity
 import com.autoclique.live.capture.ScreenCapture
 import com.autoclique.live.data.PointStore
@@ -58,6 +59,10 @@ object AutoClicker {
     private val _messages = MutableSharedFlow<String>(replay = 0, extraBufferCapacity = 8)
     val messages: SharedFlow<String> = _messages.asSharedFlow()
 
+    /** Contexto do app, guardado no start() para o stop() conseguir traduzir a mensagem. */
+    @Volatile
+    private var appContext: Context? = null
+
     /** Marcado quando a tela gira, para o laço não usar o tamanho antigo por até 1 s. */
     @Volatile
     private var screenDirty = true
@@ -80,19 +85,19 @@ object AutoClicker {
         val active = PointStore.pontosAtivos()
         if (active.isEmpty()) {
             val nome = PointStore.botAtual()?.name ?: "bot"
-            say("O bot \"$nome\" nao tem nenhum ponto ligado.")
+            say(app.getString(R.string.msg_bot_no_points, nome))
             return
         }
         if (!Perms.isAccessibilityEnabled(app)) {
-            say("Ative a Acessibilidade do AutoClique Live para ele conseguir tocar na tela.")
+            say(app.getString(R.string.msg_need_accessibility))
             return
         }
         if (!Perms.canDrawOverlays(app)) {
-            say("Permita “sobrepor outros apps” para o botão flutuante.")
+            say(app.getString(R.string.msg_need_overlay))
             return
         }
         if (active.any { it.useColor } && !ScreenCapture.ready) {
-            say("Autorize a captura de tela — ela é usada só para conferir a cor do botão.")
+            say(app.getString(R.string.msg_need_capture))
             ProjectionRequestActivity.request(app, autoStart = true)
             return
         }
@@ -106,7 +111,8 @@ object AutoClicker {
         _running.value = true
         val newJob = scope.launch { loop(app) }
         job = newJob
-        say("Clicador ligado.")
+        appContext = app
+        say(app.getString(R.string.msg_started))
     }
 
     @Synchronized
@@ -116,7 +122,7 @@ object AutoClicker {
         current?.cancel()
         if (_running.value) {
             _running.value = false
-            say("Clicador parado.")
+            appContext?.let { say(it.getString(R.string.msg_stopped)) }
         }
     }
 
@@ -133,7 +139,7 @@ object AutoClicker {
             while (coroutineContext.isActive) {
                 val svc = ClickAccessibilityService.instance
                 if (svc == null) {
-                    say("O serviço de acessibilidade foi desligado. Clicador parado.")
+                    say(ctx.getString(R.string.msg_a11y_off))
                     break
                 }
 
@@ -159,7 +165,7 @@ object AutoClicker {
                         nextDue[p.id] = now + 1000L
                         if (!warnedRotation) {
                             warnedRotation = true
-                            say("Tela girou: pontos pausados até voltar à orientação original.")
+                            say(ctx.getString(R.string.msg_rotated))
                         }
                         continue
                     }

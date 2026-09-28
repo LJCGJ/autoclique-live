@@ -271,10 +271,7 @@ class OverlayService : Service() {
                 runCatching { wm.updateViewLayout(b.root, params) }
                 val free = Rect(params.x - 8, params.y - 8, params.x + w + 8, params.y + h + 8)
                     .let { r -> points.none { r.contains(it.x, it.y) } }
-                toast(
-                    if (free) "Movi a bolha para não cobrir um ponto de clique."
-                    else "Atenção: a bolha está sobre um ponto de clique. Arraste-a para outro lugar."
-                )
+                toast(getString(if (free) R.string.msg_bubble_moved else R.string.msg_bubble_over_point))
             }
         }
     }
@@ -283,7 +280,7 @@ class OverlayService : Service() {
 
     private fun showPickerOverlay() {
         if (!Perms.canDrawOverlays(this)) {
-            toast("Permita “sobrepor outros apps” para marcar pontos.")
+            toast(getString(R.string.msg_overlay_for_points))
             return
         }
         // removePicker() zera editingId — guarde qual ponto estamos editando.
@@ -352,14 +349,14 @@ class OverlayService : Service() {
         lp.leftMargin = pickX - size / 2
         lp.topMargin = pickY - size / 2
         p.crosshair.layoutParams = lp
-        p.coords.text = "x: $pickX   y: $pickY" +
+        p.coords.text = getString(R.string.picker_coords, pickX, pickY) +
             (pickedColor?.let { "   •   ${hex(it)}" } ?: "")
         p.swatch.paintSwatch(pickedColor)
     }
 
     private fun grabColor(p: OverlayPickerBinding) {
         if (!ScreenCapture.ready) {
-            toast("Autorize a captura de tela e toque em “Gravar cor” de novo.")
+            toast(getString(R.string.msg_capture_then_color))
             ProjectionRequestActivity.request(this, autoStart = false)
             return
         }
@@ -378,12 +375,12 @@ class OverlayService : Service() {
             val color = if (fresh) ScreenCapture.pixelAt(pickX, pickY) else null
             p.root.visibility = View.VISIBLE
             if (color == null) {
-                toast("Não consegui ler a tela agora. Tente de novo.")
+                toast(getString(R.string.msg_read_failed))
             } else {
                 pickedColor = color
                 colorInherited = false
                 updateCrosshair(p)
-                toast("Cor gravada.")
+                toast(getString(R.string.msg_color_saved))
             }
         }
     }
@@ -474,15 +471,15 @@ class OverlayService : Service() {
             .setSmallIcon(R.drawable.ic_stat_click)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(
-                if (running) "Clicando — $clicks toque(s) até agora"
-                else "Parado — toque na bolha para iniciar"
+                if (running) getString(R.string.notif_running, clicks)
+                else getString(R.string.notif_idle)
             )
             .setOngoing(true)
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(open)
             .addAction(0, if (running) getString(R.string.stop) else getString(R.string.start), toggle)
-            .addAction(0, "Encerrar", close)
+            .addAction(0, getString(R.string.notif_close), close)
             .build()
     }
 
