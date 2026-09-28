@@ -1,0 +1,1171 @@
+From 1667096fef3e55971569d868f04ce4d3ef8679c6 Mon Sep 17 00:00:00 2001
+From: Leonardo Gonzaga Junior <colegial505@gmail.com>
+Date: Mon, 28 Sep 2026 17:02:20 +0000
+Subject: [PATCH] =?UTF-8?q?v1.1:=20API=2036,=20edge-to-edge,=20fontes=20gr?=
+ =?UTF-8?q?andes,=20ajuda=20de=20acessibilidade=20e=20ingl=C3=AAs?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- compileSdk/targetSdk 36 (AGP 8.9.3), versionCode 2 / versionName 1.1
+- Edge-to-edge: WindowInsets nas telas principal e de divulgação (botao
+  Iniciar e Aceitar/Recusar nao ficam mais atras da barra de navegacao)
+- Cabecalhos e botoes de bot em layout que quebra linha com fonte grande
+- Dialogo passo a passo antes de abrir as configuracoes de Acessibilidade
+  (deixa claro que nao e o TalkBack)
+- Internacionalizacao: ingles como idioma padrao (values/) e portugues
+  (values-pt/); todos os textos fixos do codigo movidos para recursos;
+  separador decimal segue o idioma do aparelho
+- README: senha do keystore removida
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01HFmftMp21uw71FgmAbWRxE
+---
+ README.md                                     |   4 +-
+ app/build.gradle.kts                          |   5 +-
+ app/src/main/AndroidManifest.xml              |   2 +-
+ .../autoclique/live/capture/CaptureService.kt |   2 +-
+ .../com/autoclique/live/data/PointStore.kt    |  18 +-
+ .../com/autoclique/live/engine/AutoClicker.kt |  22 ++-
+ .../autoclique/live/service/OverlayService.kt |  21 +--
+ .../autoclique/live/ui/DisclosureActivity.kt  |   4 +
+ .../com/autoclique/live/ui/MainActivity.kt    |  51 ++++--
+ .../com/autoclique/live/ui/PointAdapter.kt    |   7 +-
+ .../java/com/autoclique/live/util/Insets.kt   |  35 ++++
+ .../java/com/autoclique/live/util/Tempo.kt    |  26 +--
+ .../main/res/layout/activity_disclosure.xml   |  11 +-
+ app/src/main/res/layout/activity_main.xml     |  50 ++---
+ app/src/main/res/layout/item_point.xml        |   2 +-
+ app/src/main/res/values-pt/strings.xml        | 120 ++++++++++++
+ app/src/main/res/values/strings.xml           | 173 ++++++++++++------
+ build.gradle.kts                              |   2 +-
+ gradle.properties                             |   4 +-
+ 19 files changed, 409 insertions(+), 150 deletions(-)
+ create mode 100644 app/src/main/java/com/autoclique/live/util/Insets.kt
+ create mode 100644 app/src/main/res/values-pt/strings.xml
+
+diff --git a/README.md b/README.md
+index 050687b..9cac32a 100644
+--- a/README.md
++++ b/README.md
+@@ -12,9 +12,9 @@ O diferencial: cada ponto pode ter um **gatilho por cor**. Em vez de tocar no va
+ 2. Abra o arquivo. O Android vai pedir para permitir a instalação de apps de fontes desconhecidas — autorize para o gerenciador de arquivos que você usou.
+ 3. Instale e abra.
+ 
+-O APK é assinado com uma chave própria (`autoclique.jks`, senha `autoclique`). Guarde esse arquivo: sem ele você não consegue publicar atualizações por cima desta instalação.
++O APK é assinado com uma chave própria (`autoclique.jks`, fora do repositório). Guarde esse arquivo e a senha em local seguro: sem eles você não consegue publicar atualizações por cima desta instalação.
+ 
+-**Requisitos:** Android 8.0 (API 26) ou superior.
++**Requisitos:** Android 8.0 (API 26) ou superior. Interface em inglês e português (segue o idioma do aparelho).
+ 
+ ---
+ 
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index a975440..325f027 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -33,12 +33,12 @@ val podeAssinar = keystorePropsFile.exists() &&
+ 
+ android {
+     namespace = "com.autoclique.live"
+-    compileSdk = 35
++    compileSdk = 36
+ 
+     defaultConfig {
+         applicationId = "com.autoclique.live"
+         minSdk = 26
+-        targetSdk = 35
++        targetSdk = 36
+         // Editaveis em gradle.properties. A Play exige um versionCode MAIOR a
+         // cada envio — subir esse numero e o passo que mais se esquece.
+         versionCode = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: 1
+@@ -95,6 +95,7 @@ android {
+ dependencies {
+     implementation("androidx.core:core-ktx:1.13.1")
+     implementation("androidx.appcompat:appcompat:1.7.0")
++    implementation("androidx.activity:activity-ktx:1.9.3")
+     implementation("com.google.android.material:material:1.12.0")
+     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+     implementation("androidx.recyclerview:recyclerview:1.3.2")
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index ab0b40b..2b0ff1f 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -16,7 +16,7 @@
+         android:roundIcon="@mipmap/ic_launcher_round"
+         android:supportsRtl="true"
+         android:theme="@style/Theme.AutoClique"
+-        tools:targetApi="35">
++        tools:targetApi="36">
+ 
+         <activity
+             android:name=".ui.MainActivity"
+diff --git a/app/src/main/java/com/autoclique/live/capture/CaptureService.kt b/app/src/main/java/com/autoclique/live/capture/CaptureService.kt
+index 9bc3d5b..a0618e6 100644
+--- a/app/src/main/java/com/autoclique/live/capture/CaptureService.kt
++++ b/app/src/main/java/com/autoclique/live/capture/CaptureService.kt
+@@ -114,7 +114,7 @@ class CaptureService : Service() {
+         val n: Notification = NotificationCompat.Builder(this, Notifs.CHANNEL_CAPTURE)
+             .setSmallIcon(R.drawable.ic_stat_click)
+             .setContentTitle(getString(R.string.app_name))
+-            .setContentText("Lendo a cor da tela para o gatilho de cor")
++            .setContentText(getString(R.string.notif_capture))
+             .setOngoing(true)
+             .setPriority(NotificationCompat.PRIORITY_MIN)
+             .setContentIntent(open)
+diff --git a/app/src/main/java/com/autoclique/live/data/PointStore.kt b/app/src/main/java/com/autoclique/live/data/PointStore.kt
+index 2a2b23f..0332611 100644
+--- a/app/src/main/java/com/autoclique/live/data/PointStore.kt
++++ b/app/src/main/java/com/autoclique/live/data/PointStore.kt
+@@ -2,6 +2,7 @@ package com.autoclique.live.data
+ 
+ import android.content.Context
+ import android.content.SharedPreferences
++import com.autoclique.live.R
+ import com.autoclique.live.model.Bot
+ import com.autoclique.live.model.ClickPoint
+ import kotlinx.coroutines.flow.MutableStateFlow
+@@ -24,6 +25,9 @@ object PointStore {
+ 
+     private var prefs: SharedPreferences? = null
+ 
++    /** Só para traduzir os nomes padrão ("Meu primeiro bot", "Ponto 1"). */
++    private var app: Context? = null
++
+     private val _points = MutableStateFlow<List<ClickPoint>>(emptyList())
+     val points: StateFlow<List<ClickPoint>> = _points.asStateFlow()
+ 
+@@ -36,6 +40,7 @@ object PointStore {
+     @Synchronized
+     fun init(context: Context) {
+         if (prefs != null) return
++        app = context.applicationContext
+         prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+ 
+         _points.value = lerPontos()
+@@ -56,7 +61,7 @@ object PointStore {
+         var mudou = false
+ 
+         if (bots.isEmpty()) {
+-            bots = listOf(Bot(name = "Meu primeiro bot"))
++            bots = listOf(Bot(name = nomePadraoBot()))
+             mudou = true
+         }
+ 
+@@ -117,7 +122,7 @@ object PointStore {
+ 
+     @Synchronized
+     fun criarBot(nome: String): Bot {
+-        val bot = Bot(name = nome.ifBlank { "Novo bot" })
++        val bot = Bot(name = nome.ifBlank { app?.getString(R.string.bot_new_name) ?: "New bot" })
+         val lista = _bots.value + bot
+         _bots.value = lista
+         gravarBots(lista)
+@@ -137,7 +142,7 @@ object PointStore {
+     @Synchronized
+     fun excluirBot(id: String) {
+         val restantes = _bots.value.filterNot { it.id == id }
+-        val lista = restantes.ifEmpty { listOf(Bot(name = "Meu primeiro bot")) }
++        val lista = restantes.ifEmpty { listOf(Bot(name = nomePadraoBot())) }
+         _bots.value = lista
+         gravarBots(lista)
+ 
+@@ -188,5 +193,10 @@ object PointStore {
+ 
+     fun find(id: String?): ClickPoint? = _points.value.firstOrNull { it.id == id }
+ 
+-    fun suggestName(): String = "Ponto ${pontosDoBot().size + 1}"
++    fun suggestName(): String {
++        val n = pontosDoBot().size + 1
++        return app?.getString(R.string.point_default_name, n) ?: "Point $n"
++    }
++
++    private fun nomePadraoBot(): String = app?.getString(R.string.bot_default_name) ?: "My first bot"
+ }
+diff --git a/app/src/main/java/com/autoclique/live/engine/AutoClicker.kt b/app/src/main/java/com/autoclique/live/engine/AutoClicker.kt
+index e37fe3c..4f476eb 100644
+--- a/app/src/main/java/com/autoclique/live/engine/AutoClicker.kt
++++ b/app/src/main/java/com/autoclique/live/engine/AutoClicker.kt
+@@ -4,6 +4,7 @@ import android.content.Context
+ import android.graphics.Color
+ import android.os.SystemClock
+ import android.util.Log
++import com.autoclique.live.R
+ import com.autoclique.live.capture.ProjectionRequestActivity
+ import com.autoclique.live.capture.ScreenCapture
+ import com.autoclique.live.data.PointStore
+@@ -58,6 +59,10 @@ object AutoClicker {
+     private val _messages = MutableSharedFlow<String>(replay = 0, extraBufferCapacity = 8)
+     val messages: SharedFlow<String> = _messages.asSharedFlow()
+ 
++    /** Contexto do app, guardado no start() para o stop() conseguir traduzir a mensagem. */
++    @Volatile
++    private var appContext: Context? = null
++
+     /** Marcado quando a tela gira, para o laço não usar o tamanho antigo por até 1 s. */
+     @Volatile
+     private var screenDirty = true
+@@ -80,19 +85,19 @@ object AutoClicker {
+         val active = PointStore.pontosAtivos()
+         if (active.isEmpty()) {
+             val nome = PointStore.botAtual()?.name ?: "bot"
+-            say("O bot \"$nome\" nao tem nenhum ponto ligado.")
++            say(app.getString(R.string.msg_bot_no_points, nome))
+             return
+         }
+         if (!Perms.isAccessibilityEnabled(app)) {
+-            say("Ative a Acessibilidade do AutoClique Live para ele conseguir tocar na tela.")
++            say(app.getString(R.string.msg_need_accessibility))
+             return
+         }
+         if (!Perms.canDrawOverlays(app)) {
+-            say("Permita “sobrepor outros apps” para o botão flutuante.")
++            say(app.getString(R.string.msg_need_overlay))
+             return
+         }
+         if (active.any { it.useColor } && !ScreenCapture.ready) {
+-            say("Autorize a captura de tela — ela é usada só para conferir a cor do botão.")
++            say(app.getString(R.string.msg_need_capture))
+             ProjectionRequestActivity.request(app, autoStart = true)
+             return
+         }
+@@ -106,7 +111,8 @@ object AutoClicker {
+         _running.value = true
+         val newJob = scope.launch { loop(app) }
+         job = newJob
+-        say("Clicador ligado.")
++        appContext = app
++        say(app.getString(R.string.msg_started))
+     }
+ 
+     @Synchronized
+@@ -116,7 +122,7 @@ object AutoClicker {
+         current?.cancel()
+         if (_running.value) {
+             _running.value = false
+-            say("Clicador parado.")
++            appContext?.let { say(it.getString(R.string.msg_stopped)) }
+         }
+     }
+ 
+@@ -133,7 +139,7 @@ object AutoClicker {
+             while (coroutineContext.isActive) {
+                 val svc = ClickAccessibilityService.instance
+                 if (svc == null) {
+-                    say("O serviço de acessibilidade foi desligado. Clicador parado.")
++                    say(ctx.getString(R.string.msg_a11y_off))
+                     break
+                 }
+ 
+@@ -159,7 +165,7 @@ object AutoClicker {
+                         nextDue[p.id] = now + 1000L
+                         if (!warnedRotation) {
+                             warnedRotation = true
+-                            say("Tela girou: pontos pausados até voltar à orientação original.")
++                            say(ctx.getString(R.string.msg_rotated))
+                         }
+                         continue
+                     }
+diff --git a/app/src/main/java/com/autoclique/live/service/OverlayService.kt b/app/src/main/java/com/autoclique/live/service/OverlayService.kt
+index b4ac3cd..f811de2 100644
+--- a/app/src/main/java/com/autoclique/live/service/OverlayService.kt
++++ b/app/src/main/java/com/autoclique/live/service/OverlayService.kt
+@@ -271,10 +271,7 @@ class OverlayService : Service() {
+                 runCatching { wm.updateViewLayout(b.root, params) }
+                 val free = Rect(params.x - 8, params.y - 8, params.x + w + 8, params.y + h + 8)
+                     .let { r -> points.none { r.contains(it.x, it.y) } }
+-                toast(
+-                    if (free) "Movi a bolha para não cobrir um ponto de clique."
+-                    else "Atenção: a bolha está sobre um ponto de clique. Arraste-a para outro lugar."
+-                )
++                toast(getString(if (free) R.string.msg_bubble_moved else R.string.msg_bubble_over_point))
+             }
+         }
+     }
+@@ -283,7 +280,7 @@ class OverlayService : Service() {
+ 
+     private fun showPickerOverlay() {
+         if (!Perms.canDrawOverlays(this)) {
+-            toast("Permita “sobrepor outros apps” para marcar pontos.")
++            toast(getString(R.string.msg_overlay_for_points))
+             return
+         }
+         // removePicker() zera editingId — guarde qual ponto estamos editando.
+@@ -352,14 +349,14 @@ class OverlayService : Service() {
+         lp.leftMargin = pickX - size / 2
+         lp.topMargin = pickY - size / 2
+         p.crosshair.layoutParams = lp
+-        p.coords.text = "x: $pickX   y: $pickY" +
++        p.coords.text = getString(R.string.picker_coords, pickX, pickY) +
+             (pickedColor?.let { "   •   ${hex(it)}" } ?: "")
+         p.swatch.paintSwatch(pickedColor)
+     }
+ 
+     private fun grabColor(p: OverlayPickerBinding) {
+         if (!ScreenCapture.ready) {
+-            toast("Autorize a captura de tela e toque em “Gravar cor” de novo.")
++            toast(getString(R.string.msg_capture_then_color))
+             ProjectionRequestActivity.request(this, autoStart = false)
+             return
+         }
+@@ -378,12 +375,12 @@ class OverlayService : Service() {
+             val color = if (fresh) ScreenCapture.pixelAt(pickX, pickY) else null
+             p.root.visibility = View.VISIBLE
+             if (color == null) {
+-                toast("Não consegui ler a tela agora. Tente de novo.")
++                toast(getString(R.string.msg_read_failed))
+             } else {
+                 pickedColor = color
+                 colorInherited = false
+                 updateCrosshair(p)
+-                toast("Cor gravada.")
++                toast(getString(R.string.msg_color_saved))
+             }
+         }
+     }
+@@ -474,15 +471,15 @@ class OverlayService : Service() {
+             .setSmallIcon(R.drawable.ic_stat_click)
+             .setContentTitle(getString(R.string.app_name))
+             .setContentText(
+-                if (running) "Clicando — $clicks toque(s) até agora"
+-                else "Parado — toque na bolha para iniciar"
++                if (running) getString(R.string.notif_running, clicks)
++                else getString(R.string.notif_idle)
+             )
+             .setOngoing(true)
+             .setSilent(true)
+             .setPriority(NotificationCompat.PRIORITY_LOW)
+             .setContentIntent(open)
+             .addAction(0, if (running) getString(R.string.stop) else getString(R.string.start), toggle)
+-            .addAction(0, "Encerrar", close)
++            .addAction(0, getString(R.string.notif_close), close)
+             .build()
+     }
+ 
+diff --git a/app/src/main/java/com/autoclique/live/ui/DisclosureActivity.kt b/app/src/main/java/com/autoclique/live/ui/DisclosureActivity.kt
+index ebadf55..37abeab 100644
+--- a/app/src/main/java/com/autoclique/live/ui/DisclosureActivity.kt
++++ b/app/src/main/java/com/autoclique/live/ui/DisclosureActivity.kt
+@@ -4,10 +4,12 @@ import android.content.Intent
+ import android.net.Uri
+ import android.os.Bundle
+ import android.widget.Toast
++import androidx.activity.enableEdgeToEdge
+ import androidx.appcompat.app.AppCompatActivity
+ import com.autoclique.live.R
+ import com.autoclique.live.databinding.ActivityDisclosureBinding
+ import com.autoclique.live.util.Consent
++import com.autoclique.live.util.Insets
+ 
+ /**
+  * Divulgação proeminente exigida pela política de uso da AccessibilityService.
+@@ -24,8 +26,10 @@ class DisclosureActivity : AppCompatActivity() {
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
++        enableEdgeToEdge()
+         b = ActivityDisclosureBinding.inflate(layoutInflater)
+         setContentView(b.root)
++        Insets.apply(b.root, b.header)
+ 
+         b.btnPolitica.setOnClickListener {
+             val url = getString(R.string.privacy_policy_url)
+diff --git a/app/src/main/java/com/autoclique/live/ui/MainActivity.kt b/app/src/main/java/com/autoclique/live/ui/MainActivity.kt
+index c9a9a59..d3545e3 100644
+--- a/app/src/main/java/com/autoclique/live/ui/MainActivity.kt
++++ b/app/src/main/java/com/autoclique/live/ui/MainActivity.kt
+@@ -15,6 +15,7 @@ import android.widget.EditText
+ import android.widget.SeekBar
+ import android.widget.Toast
+ import androidx.activity.result.contract.ActivityResultContracts
++import androidx.activity.enableEdgeToEdge
+ import androidx.appcompat.app.AlertDialog
+ import androidx.appcompat.app.AppCompatActivity
+ import androidx.lifecycle.Lifecycle
+@@ -32,6 +33,7 @@ import com.autoclique.live.engine.AutoClicker
+ import com.autoclique.live.model.ClickPoint
+ import com.autoclique.live.service.OverlayService
+ import com.autoclique.live.util.Consent
++import com.autoclique.live.util.Insets
+ import com.autoclique.live.util.Perms
+ import com.autoclique.live.util.Tempo
+ import kotlinx.coroutines.flow.combine
+@@ -68,8 +70,10 @@ class MainActivity : AppCompatActivity() {
+             return
+         }
+ 
++        enableEdgeToEdge()
+         b = ActivityMainBinding.inflate(layoutInflater)
+         setContentView(b.root)
++        Insets.apply(b.root, b.header)
+ 
+         PointStore.init(this)
+ 
+@@ -106,7 +110,7 @@ class MainActivity : AppCompatActivity() {
+         b.btnBotNovo.setOnClickListener {
+             pedirNome(getString(R.string.bot_criar_titulo), "") { nome ->
+                 PointStore.criarBot(nome)
+-                toast("Bot “$nome” criado. Adicione os pontos dele.")
++                toast(getString(R.string.bot_criado, nome))
+             }
+         }
+ 
+@@ -197,13 +201,13 @@ class MainActivity : AppCompatActivity() {
+                 launch {
+                     AutoClicker.running.collect { running ->
+                         b.btnToggle.text = getString(if (running) R.string.stop else R.string.start)
+-                        b.tvStatus.text = if (running) "Clicando…" else "Parado"
++                        b.tvStatus.text = getString(if (running) R.string.status_clicking else R.string.status_stopped)
+                     }
+                 }
+                 launch { AutoClicker.messages.collect { toast(it) } }
+                 launch {
+                     AutoClicker.clickCount.collect { n ->
+-                        if (AutoClicker.running.value) b.tvStatus.text = "Clicando — $n toque(s)"
++                        if (AutoClicker.running.value) b.tvStatus.text = getString(R.string.status_clicking_count, n)
+                     }
+                 }
+             }
+@@ -241,10 +245,7 @@ class MainActivity : AppCompatActivity() {
+     // ----------------------------------------------------------- permissões
+ 
+     private fun configurarPermissoes() {
+-        b.btnPermAccessibility.setOnClickListener {
+-            toast("Encontre “AutoClique Live” na lista e ative.")
+-            startActivity(Perms.accessibilitySettingsIntent())
+-        }
++        b.btnPermAccessibility.setOnClickListener { explicarAcessibilidade() }
+         b.btnPermOverlay.setOnClickListener { startActivity(Perms.overlaySettingsIntent(this)) }
+         b.btnPermNotification.setOnClickListener {
+             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+@@ -261,6 +262,24 @@ class MainActivity : AppCompatActivity() {
+         }
+     }
+ 
++    /**
++     * Passo a passo antes de abrir as configurações do sistema. Testadores
++     * confundiam o serviço do app com o TalkBack e não achavam o AutoClique na
++     * lista — a explicação vem antes, não num toast que some em 2 s.
++     */
++    private fun explicarAcessibilidade() {
++        // getText (e não getString) preserva o <b> do recurso.
++        AlertDialog.Builder(this)
++            .setTitle(R.string.a11y_help_title)
++            .setMessage(getText(R.string.a11y_help_body))
++            .setNegativeButton(R.string.cancel, null)
++            .setPositiveButton(R.string.a11y_help_open) { _, _ ->
++                toast(getString(R.string.msg_find_in_list))
++                startActivity(Perms.accessibilitySettingsIntent())
++            }
++            .show()
++    }
++
+     private fun refreshPermissions() {
+         fun mark(button: android.widget.Button, granted: Boolean) {
+             button.text = if (granted) getString(R.string.granted) else getString(R.string.grant)
+@@ -278,13 +297,13 @@ class MainActivity : AppCompatActivity() {
+     /** Abre a mira em tela cheia e manda o app para segundo plano. */
+     private fun launchPicker(pointId: String?) {
+         if (!Perms.canDrawOverlays(this)) {
+-            toast("Primeiro permita “sobrepor outros apps”.")
++            toast(getString(R.string.msg_overlay_first))
+             startActivity(Perms.overlaySettingsIntent(this))
+             return
+         }
+         OverlayService.ensureRunning(this)
+         OverlayService.showPicker(this, pointId)
+-        toast("Abra o app alvo, arraste a mira até o botão e confirme.")
++        toast(getString(R.string.msg_open_target))
+         moveTaskToBack(true)
+     }
+ 
+@@ -295,19 +314,19 @@ class MainActivity : AppCompatActivity() {
+         d.etInterval.setText(Tempo.msParaSegundos(point.intervalMs))
+         d.etDuration.setText(point.tapDurationMs.toString())
+         d.etPoll.setText(Tempo.msParaSegundos(point.pollMs))
+-        d.tvCoords.text = "Posição: x ${point.x}, y ${point.y}"
++        d.tvCoords.text = getString(R.string.editor_position, point.x, point.y)
+         d.cbColor.isChecked = point.useColor
+         d.sbTolerance.progress = point.tolerance
+         d.colorBox.visibility = if (point.useColor) View.VISIBLE else View.GONE
+         d.vColor.paintSwatch(point.targetColor)
+-        d.tvColor.text = if (point.useColor) "Cor gravada: ${hex(point.targetColor)}"
+-        else "Nenhuma cor gravada — use “Remarcar posição”."
+-        d.tvTolerance.text = "${getString(R.string.field_tolerance)}: ${point.tolerance}%"
++        d.tvColor.text = if (point.useColor) getString(R.string.editor_color_saved, hex(point.targetColor))
++        else getString(R.string.editor_color_none)
++        d.tvTolerance.text = getString(R.string.tolerance_value, getString(R.string.field_tolerance), point.tolerance)
+ 
+         // Taxa de cliques recalculada a cada tecla digitada.
+         fun atualizarTaxa() {
+             val ms = Tempo.segundosParaMs(d.etInterval.text.toString())
+-            d.tvTaxa.text = if (ms == null) "—" else Tempo.cliquesPorSegundo(ms)
++            d.tvTaxa.text = if (ms == null) "—" else Tempo.cliquesPorSegundo(this, ms)
+         }
+         atualizarTaxa()
+         d.etInterval.addTextChangedListener(object : TextWatcher {
+@@ -321,7 +340,7 @@ class MainActivity : AppCompatActivity() {
+         }
+         d.sbTolerance.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+             override fun onProgressChanged(sb: SeekBar?, value: Int, fromUser: Boolean) {
+-                d.tvTolerance.text = "${getString(R.string.field_tolerance)}: $value%"
++                d.tvTolerance.text = getString(R.string.tolerance_value, getString(R.string.field_tolerance), value)
+             }
+ 
+             override fun onStartTrackingTouch(sb: SeekBar?) {}
+@@ -340,7 +359,7 @@ class MainActivity : AppCompatActivity() {
+             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                 val intervalo = Tempo.segundosParaMs(d.etInterval.text.toString())
+                 if (intervalo == null) {
+-                    toast("Informe o intervalo em segundos, por exemplo 1 ou 0,5.")
++                    toast(getString(R.string.editor_interval_invalid))
+                     return@setOnClickListener
+                 }
+                 val updated = point.copy(
+diff --git a/app/src/main/java/com/autoclique/live/ui/PointAdapter.kt b/app/src/main/java/com/autoclique/live/ui/PointAdapter.kt
+index 5d9c3b6..c8c2f15 100644
+--- a/app/src/main/java/com/autoclique/live/ui/PointAdapter.kt
++++ b/app/src/main/java/com/autoclique/live/ui/PointAdapter.kt
+@@ -3,6 +3,7 @@ package com.autoclique.live.ui
+ import android.view.LayoutInflater
+ import android.view.ViewGroup
+ import androidx.recyclerview.widget.RecyclerView
++import com.autoclique.live.R
+ import com.autoclique.live.databinding.ItemPointBinding
+ import com.autoclique.live.model.ClickPoint
+ import com.autoclique.live.util.Tempo
+@@ -31,12 +32,12 @@ class PointAdapter(
+         val b = holder.b
+ 
+         b.tvName.text = p.name
++        val ctx = b.root.context
+         b.tvDetails.text = buildString {
+-            append(Tempo.resumo(p.intervalMs))
++            append(Tempo.resumo(ctx, p.intervalMs))
+             append("  •  x ").append(p.x).append(", y ").append(p.y)
+             if (p.useColor) {
+-                append("  •  cor ").append(hex(p.targetColor))
+-                append(" (tol. ").append(p.tolerance).append("%)")
++                append("  •  ").append(ctx.getString(R.string.detail_color, hex(p.targetColor), p.tolerance))
+             }
+         }
+ 
+diff --git a/app/src/main/java/com/autoclique/live/util/Insets.kt b/app/src/main/java/com/autoclique/live/util/Insets.kt
+new file mode 100644
+index 0000000..9318d84
+--- /dev/null
++++ b/app/src/main/java/com/autoclique/live/util/Insets.kt
+@@ -0,0 +1,35 @@
++package com.autoclique.live.util
++
++import android.view.View
++import androidx.core.view.ViewCompat
++import androidx.core.view.WindowInsetsCompat
++
++/**
++ * Edge-to-edge: a partir do targetSdk 35 o Android desenha o app por baixo
++ * da barra de status e da barra de navegação. Sem tratar os insets, o botão
++ * de baixo fica escondido atrás da barra de navegação (relato dos testadores)
++ * e o cabeçalho encosta na barra de status.
++ *
++ * [root] recebe o padding lateral e inferior (barra de navegação / gestos);
++ * [header] recebe o padding superior (barra de status / recorte da câmera),
++ * somado ao padding que ele já tinha no XML.
++ */
++object Insets {
++
++    fun apply(root: View, header: View) {
++        val headerTop = header.paddingTop
++        val rootBottom = root.paddingBottom
++        val rootLeft = root.paddingLeft
++        val rootRight = root.paddingRight
++
++        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
++            val bars = insets.getInsets(
++                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
++            )
++            root.setPadding(rootLeft + bars.left, root.paddingTop, rootRight + bars.right, rootBottom + bars.bottom)
++            header.setPadding(header.paddingLeft, headerTop + bars.top, header.paddingRight, header.paddingBottom)
++            insets
++        }
++        ViewCompat.requestApplyInsets(root)
++    }
++}
+diff --git a/app/src/main/java/com/autoclique/live/util/Tempo.kt b/app/src/main/java/com/autoclique/live/util/Tempo.kt
+index 01a786d..e8da760 100644
+--- a/app/src/main/java/com/autoclique/live/util/Tempo.kt
++++ b/app/src/main/java/com/autoclique/live/util/Tempo.kt
+@@ -1,5 +1,7 @@
+ package com.autoclique.live.util
+ 
++import android.content.Context
++import com.autoclique.live.R
+ import java.util.Locale
+ 
+ /**
+@@ -11,7 +13,8 @@ import java.util.Locale
+  */
+ object Tempo {
+ 
+-    private val BR = Locale("pt", "BR")
++    /** Separador decimal do idioma do aparelho ("1,5" em pt-BR, "1.5" em inglês). */
++    private val locale: Locale get() = Locale.getDefault()
+ 
+     /** Intervalo mínimo aceito: 50 ms, ou seja 20 cliques por segundo. */
+     const val MIN_MS = 50L
+@@ -30,31 +33,32 @@ object Tempo {
+         return if (segundos == segundos.toLong().toDouble()) {
+             segundos.toLong().toString()
+         } else {
+-            String.format(BR, "%.2f", segundos).trimEnd('0').trimEnd(',')
++            String.format(locale, "%.2f", segundos).trimEnd('0').trimEnd(',').trimEnd('.')
+         }
+     }
+ 
+     /** "a cada 1,5 s" -> "0,67 clique/s". Texto pronto para exibir. */
+-    fun cliquesPorSegundo(ms: Long): String {
++    fun cliquesPorSegundo(ctx: Context, ms: Long): String {
+         if (ms <= 0L) return ""
+         val taxa = 1000.0 / ms
+         val numero = formatarTaxa(taxa)
+-        val unidade = if (taxa == 1.0) "clique" else "cliques"
+-        return "$numero $unidade por segundo"
++        return ctx.getString(
++            if (taxa == 1.0) R.string.rate_per_second_one else R.string.rate_per_second, numero
++        )
+     }
+ 
+     /** Versão curta para a lista: "a cada 1,5 s  -  0,67/s". */
+-    fun resumo(ms: Long): String {
++    fun resumo(ctx: Context, ms: Long): String {
+         val taxa = if (ms > 0) 1000.0 / ms else 0.0
+-        return "a cada ${msParaSegundos(ms)} s  -  ${formatarTaxa(taxa)}/s"
++        return ctx.getString(R.string.detail_every, msParaSegundos(ms), formatarTaxa(taxa))
+     }
+ 
+     /** Sem casa decimal quando é número redondo: "1", "2", "1,5", "0,67". */
+     private fun formatarTaxa(taxa: Double): String = when {
+-        taxa >= 10 -> String.format(BR, "%.0f", taxa)
++        taxa >= 10 -> String.format(locale, "%.0f", taxa)
+         taxa >= 1 ->
+-            if (taxa == Math.floor(taxa)) String.format(BR, "%.0f", taxa)
+-            else String.format(BR, "%.1f", taxa)
+-        else -> String.format(BR, "%.2f", taxa)
++            if (taxa == Math.floor(taxa)) String.format(locale, "%.0f", taxa)
++            else String.format(locale, "%.1f", taxa)
++        else -> String.format(locale, "%.2f", taxa)
+     }
+ }
+diff --git a/app/src/main/res/layout/activity_disclosure.xml b/app/src/main/res/layout/activity_disclosure.xml
+index c69df57..1aa61e4 100644
+--- a/app/src/main/res/layout/activity_disclosure.xml
++++ b/app/src/main/res/layout/activity_disclosure.xml
+@@ -5,17 +5,18 @@
+     android:orientation="vertical">
+ 
+     <LinearLayout
++        android:id="@+id/header"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:background="@color/brand"
+         android:orientation="vertical"
+         android:paddingStart="20dp"
+-        android:paddingTop="40dp"
++        android:paddingTop="16dp"
+         android:paddingEnd="20dp"
+         android:paddingBottom="20dp">
+ 
+         <TextView
+-            android:layout_width="wrap_content"
++            android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:text="@string/app_name"
+             android:textColor="#FFFFFFFF"
+@@ -113,14 +114,16 @@
+             android:id="@+id/btnRecusar"
+             style="?attr/materialButtonOutlinedStyle"
+             android:layout_width="0dp"
+-            android:layout_height="52dp"
++            android:layout_height="wrap_content"
++            android:minHeight="52dp"
+             android:layout_weight="1"
+             android:text="@string/disc_recusar" />
+ 
+         <Button
+             android:id="@+id/btnAceitar"
+             android:layout_width="0dp"
+-            android:layout_height="52dp"
++            android:layout_height="wrap_content"
++            android:minHeight="52dp"
+             android:layout_marginStart="12dp"
+             android:layout_weight="1.4"
+             android:text="@string/disc_aceitar"
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+index 92d5575..de95680 100644
+--- a/app/src/main/res/layout/activity_main.xml
++++ b/app/src/main/res/layout/activity_main.xml
+@@ -5,17 +5,18 @@
+     android:orientation="vertical">
+ 
+     <LinearLayout
++        android:id="@+id/header"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:background="@color/brand"
+         android:orientation="vertical"
+         android:paddingStart="20dp"
+-        android:paddingTop="36dp"
++        android:paddingTop="16dp"
+         android:paddingEnd="20dp"
+         android:paddingBottom="18dp">
+ 
+         <TextView
+-            android:layout_width="wrap_content"
++            android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:text="@string/app_name"
+             android:textColor="#FFFFFFFF"
+@@ -27,7 +28,7 @@
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_marginTop="4dp"
+-            android:text="Parado"
++            android:text="@string/status_stopped"
+             android:textColor="#CCFFFFFF"
+             android:textSize="14sp" />
+     </LinearLayout>
+@@ -153,56 +154,59 @@
+             android:textSize="13sp"
+             android:textStyle="bold" />
+ 
++        <Spinner
++            android:id="@+id/spBots"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:minHeight="48dp" />
++
++        <!-- Botões com peso igual e texto que pode quebrar linha: com fonte
++             grande do sistema eles não cortam mais o rótulo. -->
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+-            android:gravity="center_vertical"
++            android:layout_marginTop="4dp"
+             android:orientation="horizontal">
+ 
+-            <Spinner
+-                android:id="@+id/spBots"
+-                android:layout_width="0dp"
+-                android:layout_height="wrap_content"
+-                android:layout_weight="1"
+-                android:minHeight="48dp" />
+-
+             <Button
+                 android:id="@+id/btnBotNovo"
+                 style="?attr/materialButtonOutlinedStyle"
+-                android:layout_width="wrap_content"
++                android:layout_width="0dp"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="4dp"
++                android:layout_weight="1"
+                 android:insetLeft="0dp"
+                 android:insetRight="0dp"
+                 android:minWidth="0dp"
+-                android:paddingStart="12dp"
+-                android:paddingEnd="12dp"
++                android:paddingStart="8dp"
++                android:paddingEnd="8dp"
+                 android:text="@string/bot_novo" />
+ 
+             <Button
+                 android:id="@+id/btnBotRenomear"
+                 style="?attr/materialButtonOutlinedStyle"
+-                android:layout_width="wrap_content"
++                android:layout_width="0dp"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="4dp"
++                android:layout_marginStart="6dp"
++                android:layout_weight="1"
+                 android:insetLeft="0dp"
+                 android:insetRight="0dp"
+                 android:minWidth="0dp"
+-                android:paddingStart="12dp"
+-                android:paddingEnd="12dp"
++                android:paddingStart="8dp"
++                android:paddingEnd="8dp"
+                 android:text="@string/bot_renomear" />
+ 
+             <Button
+                 android:id="@+id/btnBotExcluir"
+                 style="?attr/materialButtonOutlinedStyle"
+-                android:layout_width="wrap_content"
++                android:layout_width="0dp"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="4dp"
++                android:layout_marginStart="6dp"
++                android:layout_weight="1"
+                 android:insetLeft="0dp"
+                 android:insetRight="0dp"
+                 android:minWidth="0dp"
+-                android:paddingStart="12dp"
+-                android:paddingEnd="12dp"
++                android:paddingStart="8dp"
++                android:paddingEnd="8dp"
+                 android:text="@string/bot_excluir" />
+         </LinearLayout>
+     </LinearLayout>
+diff --git a/app/src/main/res/layout/item_point.xml b/app/src/main/res/layout/item_point.xml
+index 243fa6a..1d62bb6 100644
+--- a/app/src/main/res/layout/item_point.xml
++++ b/app/src/main/res/layout/item_point.xml
+@@ -48,5 +48,5 @@
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:minWidth="0dp"
+-        android:text="Editar" />
++        android:text="@string/edit" />
+ </LinearLayout>
+diff --git a/app/src/main/res/values-pt/strings.xml b/app/src/main/res/values-pt/strings.xml
+new file mode 100644
+index 0000000..940076f
+--- /dev/null
++++ b/app/src/main/res/values-pt/strings.xml
+@@ -0,0 +1,120 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Português (Brasil). O idioma padrão (inglês) fica em values/strings.xml. -->
++<resources>
++    <string name="app_name">AutoClique Live</string>
++    <string name="accessibility_label">AutoClique Live — toques automáticos</string>
++    <string name="accessibility_description">Permite que o AutoClique Live toque na tela nos pontos que você marcou. Nenhuma informação da tela é lida ou enviada para fora do aparelho.</string>
++
++    <!-- ================= Divulgação proeminente (política do Google) ================= -->
++    <string name="disc_header">Antes de começar, leia como o app funciona</string>
++
++    <string name="disc_intro">O AutoClique Live toca na tela por você, nos pontos e nos intervalos que você mesmo configurar. Ele segue apenas o que você definiu: não decide nada sozinho, não aprende e não muda de comportamento por conta própria.\n\nPara isso, ele precisa de duas permissões sensíveis. Aqui está exatamente o que cada uma faz.</string>
++
++    <string name="disc_a11y_titulo">1. Serviço de Acessibilidade</string>
++    <string name="disc_a11y_corpo">É a única forma no Android de um app tocar na tela de outro aplicativo. O AutoClique Live a utiliza <b>somente para executar toques</b> nas coordenadas que você marcou.\n\nEle não lê textos, botões, senhas nem qualquer conteúdo das telas que você usa. O serviço ignora todos os eventos de acessibilidade que o sistema envia.</string>
++
++    <string name="disc_captura_titulo">2. Captura de tela (opcional)</string>
++    <string name="disc_captura_corpo">Usada apenas se você ativar o recurso <b>“Só clicar quando a cor bater”</b> em algum ponto. Nesse caso o app lê a cor dos pixels naquela coordenada, para saber se o botão que você quer já apareceu.\n\nNenhuma imagem é gravada, exibida ou guardada. Só o valor da cor daquele ponto é comparado, na memória, e descartado em seguida. Se você não usar o gatilho por cor, essa permissão nunca é solicitada.</string>
++
++    <string name="disc_nao_titulo">O que o app não faz</string>
++    <string name="disc_nao_corpo">• Não coleta, armazena nem compartilha dados pessoais.\n• Não envia nada para a internet: o app não pede permissão de rede, então não tem como transmitir informação alguma.\n• Não exibe anúncios e não usa ferramentas de análise.\n• Suas configurações (pontos, intervalos e cores) ficam apenas neste aparelho e são apagadas ao desinstalar.</string>
++
++    <string name="disc_ver_politica">Ler a política de privacidade</string>
++    <string name="disc_recusar">Recusar</string>
++    <string name="disc_aceitar">Aceito e quero continuar</string>
++
++    <!-- ================================ Tela principal ================================ -->
++    <string name="status_stopped">Parado</string>
++    <string name="status_clicking">Clicando…</string>
++    <string name="status_clicking_count">Clicando — %1$d toque(s)</string>
++
++    <string name="perm_title">Permissões necessárias</string>
++    <string name="perm_accessibility">Acessibilidade (para tocar na tela)</string>
++    <string name="perm_overlay">Sobrepor outros apps (botão flutuante)</string>
++    <string name="perm_notification">Notificações (serviço em segundo plano)</string>
++    <string name="perm_capture">Captura de tela (gatilho por cor)</string>
++
++    <string name="grant">Conceder</string>
++    <string name="granted">OK</string>
++
++    <string name="a11y_help_title">Como ativar a permissão de Acessibilidade</string>
++    <string name="a11y_help_body">O Android vai abrir as configurações de Acessibilidade. Faça assim:\n\n1. Procure <b>AutoClique Live</b> na lista. Em alguns celulares ele fica em “Apps instalados” ou “Apps baixados”.\n2. Toque nele e <b>ative</b> a chave.\n3. Confirme o aviso do Android e volte para cá.\n\nEsse é o serviço do próprio AutoClique, não o TalkBack nem o leitor de tela — não precisa ligar esses. O serviço só executa os toques que você configurou; ele não lê a tela.\n\nPara pausar tudo rapidamente, use a notificação ou o botão flutuante.</string>
++    <string name="a11y_help_open">Abrir configurações</string>
++
++    <string name="bot_label">Bot selecionado</string>
++    <string name="bot_novo">+ Novo</string>
++    <string name="bot_renomear">Renomear</string>
++    <string name="bot_excluir">Excluir</string>
++    <string name="bot_nome_hint">Nome do bot (ex: Shopee moedas)</string>
++    <string name="bot_criar_titulo">Novo bot</string>
++    <string name="bot_renomear_titulo">Renomear bot</string>
++    <string name="bot_excluir_titulo">Excluir bot</string>
++    <string name="bot_excluir_msg">Excluir o bot “%1$s” e os %2$d ponto(s) dele? Isso não pode ser desfeito.</string>
++    <string name="bot_criado">Bot “%1$s” criado. Adicione os pontos dele.</string>
++    <string name="bot_default_name">Meu primeiro bot</string>
++    <string name="bot_new_name">Novo bot</string>
++    <string name="point_default_name">Ponto %1$d</string>
++
++    <string name="points_title">Pontos deste bot</string>
++    <string name="add_point">Adicionar ponto</string>
++    <string name="empty_points">Este bot ainda não tem pontos.\nToque em “Adicionar ponto”, arraste a mira até o botão de resgatar e confirme.</string>
++    <string name="edit">Editar</string>
++
++    <string name="start">Iniciar</string>
++    <string name="stop">Parar</string>
++
++    <string name="picker_hint">Arraste a mira até o botão</string>
++    <string name="pick_color">Gravar cor</string>
++    <string name="confirm">Confirmar</string>
++    <string name="cancel">Cancelar</string>
++    <string name="picker_coords">x: %1$d   y: %2$d</string>
++
++    <string name="editor_title">Configurar ponto</string>
++    <string name="field_name">Nome do ponto</string>
++    <string name="field_interval">Intervalo entre cliques, em segundos</string>
++    <string name="field_interval_hint">ex: 1  ou  0,5  ou  30</string>
++    <string name="field_duration">Duração do toque (ms) — 40 costuma bastar</string>
++    <string name="field_poll">Verificar a cor a cada, em segundos</string>
++    <string name="field_poll_hint">ex: 0,25</string>
++    <string name="use_color">Só clicar quando a cor bater</string>
++    <string name="field_tolerance">Tolerância de cor</string>
++    <string name="tolerance_value">%1$s: %2$d%%</string>
++    <string name="save">Salvar</string>
++    <string name="delete">Excluir</string>
++    <string name="remark">Remarcar posição</string>
++    <string name="editor_position">Posição: x %1$d, y %2$d</string>
++    <string name="editor_color_saved">Cor gravada: %1$s</string>
++    <string name="editor_color_none">Nenhuma cor gravada — use “Remarcar posição”.</string>
++    <string name="editor_interval_invalid">Informe o intervalo em segundos, por exemplo 1 ou 0,5.</string>
++
++    <string name="detail_every">a cada %1$s s  -  %2$s/s</string>
++    <string name="detail_color">cor %1$s (tol. %2$d%%)</string>
++    <string name="rate_per_second">%1$s cliques por segundo</string>
++    <string name="rate_per_second_one">%1$s clique por segundo</string>
++
++    <string name="msg_find_in_list">Encontre “AutoClique Live” na lista e ative.</string>
++    <string name="msg_overlay_first">Primeiro permita “sobrepor outros apps”.</string>
++    <string name="msg_open_target">Abra o app alvo, arraste a mira até o botão e confirme.</string>
++    <string name="msg_bot_no_points">O bot “%1$s” não tem nenhum ponto ligado.</string>
++    <string name="msg_need_accessibility">Ative a Acessibilidade do AutoClique Live para ele conseguir tocar na tela.</string>
++    <string name="msg_need_overlay">Permita “sobrepor outros apps” para o botão flutuante.</string>
++    <string name="msg_need_capture">Autorize a captura de tela — ela é usada só para conferir a cor do botão.</string>
++    <string name="msg_started">Clicador ligado.</string>
++    <string name="msg_stopped">Clicador parado.</string>
++    <string name="msg_a11y_off">O serviço de acessibilidade foi desligado. Clicador parado.</string>
++    <string name="msg_rotated">Tela girou: pontos pausados até voltar à orientação original.</string>
++    <string name="msg_bubble_moved">Movi a bolha para não cobrir um ponto de clique.</string>
++    <string name="msg_bubble_over_point">Atenção: a bolha está sobre um ponto de clique. Arraste-a para outro lugar.</string>
++    <string name="msg_overlay_for_points">Permita “sobrepor outros apps” para marcar pontos.</string>
++    <string name="msg_capture_then_color">Autorize a captura de tela e toque em “Gravar cor” de novo.</string>
++    <string name="msg_read_failed">Não consegui ler a tela agora. Tente de novo.</string>
++    <string name="msg_color_saved">Cor gravada.</string>
++
++    <string name="notif_running">Clicando — %1$d toque(s) até agora</string>
++    <string name="notif_idle">Parado — toque na bolha para iniciar</string>
++    <string name="notif_close">Encerrar</string>
++    <string name="notif_capture">Lendo a cor da tela para o gatilho de cor</string>
++
++    <string name="channel_overlay_name">Serviço do clicador</string>
++    <string name="channel_capture_name">Leitura de cor da tela</string>
++</resources>
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index 745dca3..a95f544 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -1,74 +1,129 @@
+ <?xml version="1.0" encoding="utf-8"?>
++<!--
++  Default language: English. Brazilian Portuguese lives in values-pt/strings.xml.
++  Every user-facing text must be here (and there) — no hardcoded strings in code.
++-->
+ <resources>
+     <string name="app_name">AutoClique Live</string>
+-    <string name="accessibility_label">AutoClique Live — toques automáticos</string>
+-    <string name="accessibility_description">Permite que o AutoClique Live toque na tela nos pontos que você marcou. Nenhuma informação da tela é lida ou enviada para fora do aparelho.</string>
++    <string name="accessibility_label">AutoClique Live — automatic taps</string>
++    <string name="accessibility_description">Lets AutoClique Live tap the screen at the points you marked. No screen content is read or sent off the device.</string>
+ 
+-    <!-- ================= Divulgação proeminente (política do Google) ================= -->
+-    <string name="privacy_policy_url">https://ljcgj.github.io/autoclique-live/privacidade.html</string>
++    <!-- ================= Prominent disclosure (Google policy) ================= -->
++    <string name="privacy_policy_url" translatable="false">https://ljcgj.github.io/autoclique-live/privacidade.html</string>
+ 
+-    <string name="disc_header">Antes de começar, leia como o app funciona</string>
++    <string name="disc_header">Before you start, read how the app works</string>
+ 
+-    <string name="disc_intro">O AutoClique Live toca na tela por você, nos pontos e nos intervalos que você mesmo configurar. Ele segue apenas o que você definiu: não decide nada sozinho, não aprende e não muda de comportamento por conta própria.\n\nPara isso, ele precisa de duas permissões sensíveis. Aqui está exatamente o que cada uma faz.</string>
++    <string name="disc_intro">AutoClique Live taps the screen for you, at the points and intervals you configure yourself. It only follows what you set up: it makes no decisions on its own, does not learn and does not change its behavior by itself.\n\nTo do that it needs two sensitive permissions. Here is exactly what each one does.</string>
+ 
+-    <string name="disc_a11y_titulo">1. Serviço de Acessibilidade</string>
+-    <string name="disc_a11y_corpo">É a única forma no Android de um app tocar na tela de outro aplicativo. O AutoClique Live a utiliza <b>somente para executar toques</b> nas coordenadas que você marcou.\n\nEle não lê textos, botões, senhas nem qualquer conteúdo das telas que você usa. O serviço ignora todos os eventos de acessibilidade que o sistema envia.</string>
++    <string name="disc_a11y_titulo">1. Accessibility Service</string>
++    <string name="disc_a11y_corpo">It is the only way on Android for an app to tap the screen of another app. AutoClique Live uses it <b>only to perform taps</b> at the coordinates you marked.\n\nIt does not read text, buttons, passwords or any content of the screens you use. The service ignores every accessibility event the system sends.</string>
+ 
+-    <string name="disc_captura_titulo">2. Captura de tela (opcional)</string>
+-    <string name="disc_captura_corpo">Usada apenas se você ativar o recurso <b>“Só clicar quando a cor bater”</b> em algum ponto. Nesse caso o app lê a cor dos pixels naquela coordenada, para saber se o botão que você quer já apareceu.\n\nNenhuma imagem é gravada, exibida ou guardada. Só o valor da cor daquele ponto é comparado, na memória, e descartado em seguida. Se você não usar o gatilho por cor, essa permissão nunca é solicitada.</string>
++    <string name="disc_captura_titulo">2. Screen capture (optional)</string>
++    <string name="disc_captura_corpo">Used only if you enable <b>“Tap only when the color matches”</b> on a point. In that case the app reads the pixel color at that coordinate to know whether the button you want has appeared.\n\nNo image is recorded, displayed or stored. Only the color value at that point is compared, in memory, and discarded right after. If you don\'t use the color trigger, this permission is never requested.</string>
+ 
+-    <string name="disc_nao_titulo">O que o app não faz</string>
+-    <string name="disc_nao_corpo">• Não coleta, armazena nem compartilha dados pessoais.\n• Não envia nada para a internet: o app não pede permissão de rede, então não tem como transmitir informação alguma.\n• Não exibe anúncios e não usa ferramentas de análise.\n• Suas configurações (pontos, intervalos e cores) ficam apenas neste aparelho e são apagadas ao desinstalar.</string>
++    <string name="disc_nao_titulo">What the app does not do</string>
++    <string name="disc_nao_corpo">• Does not collect, store or share personal data.\n• Sends nothing to the internet: the app does not request network permission, so it has no way to transmit anything.\n• Shows no ads and uses no analytics tools.\n• Your settings (points, intervals and colors) stay on this device only and are deleted when you uninstall.</string>
+ 
+-    <string name="disc_ver_politica">Ler a política de privacidade</string>
+-    <string name="disc_recusar">Recusar</string>
+-    <string name="disc_aceitar">Aceito e quero continuar</string>
++    <string name="disc_ver_politica">Read the privacy policy</string>
++    <string name="disc_recusar">Decline</string>
++    <string name="disc_aceitar">I accept and want to continue</string>
+ 
+-    <!-- ================================ Tela principal ================================ -->
+-    <string name="perm_title">Permissões necessárias</string>
+-    <string name="perm_accessibility">Acessibilidade (para tocar na tela)</string>
+-    <string name="perm_overlay">Sobrepor outros apps (botão flutuante)</string>
+-    <string name="perm_notification">Notificações (serviço em segundo plano)</string>
+-    <string name="perm_capture">Captura de tela (gatilho por cor)</string>
++    <!-- ================================ Main screen ================================ -->
++    <string name="status_stopped">Stopped</string>
++    <string name="status_clicking">Tapping…</string>
++    <string name="status_clicking_count">Tapping — %1$d tap(s)</string>
+ 
+-    <string name="grant">Conceder</string>
++    <string name="perm_title">Required permissions</string>
++    <string name="perm_accessibility">Accessibility (to tap the screen)</string>
++    <string name="perm_overlay">Draw over other apps (floating button)</string>
++    <string name="perm_notification">Notifications (background service)</string>
++    <string name="perm_capture">Screen capture (color trigger)</string>
++
++    <string name="grant">Grant</string>
+     <string name="granted">OK</string>
+ 
+-    <string name="bot_label">Bot selecionado</string>
+-    <string name="bot_novo">+ Novo</string>
+-    <string name="bot_renomear">Renomear</string>
+-    <string name="bot_excluir">Excluir</string>
+-    <string name="bot_nome_hint">Nome do bot (ex: Shopee moedas)</string>
+-    <string name="bot_criar_titulo">Novo bot</string>
+-    <string name="bot_renomear_titulo">Renomear bot</string>
+-    <string name="bot_excluir_titulo">Excluir bot</string>
+-    <string name="bot_excluir_msg">Excluir o bot “%1$s” e os %2$d ponto(s) dele? Isso não pode ser desfeito.</string>
+-
+-    <string name="points_title">Pontos deste bot</string>
+-    <string name="add_point">Adicionar ponto</string>
+-    <string name="empty_points">Este bot ainda não tem pontos.\nToque em “Adicionar ponto”, arraste a mira até o botão de resgatar e confirme.</string>
+-
+-    <string name="start">Iniciar</string>
+-    <string name="stop">Parar</string>
+-
+-    <string name="picker_hint">Arraste a mira até o botão</string>
+-    <string name="pick_color">Gravar cor</string>
+-    <string name="confirm">Confirmar</string>
+-    <string name="cancel">Cancelar</string>
+-
+-    <string name="editor_title">Configurar ponto</string>
+-    <string name="field_name">Nome do ponto</string>
+-    <string name="field_interval">Intervalo entre cliques, em segundos</string>
+-    <string name="field_interval_hint">ex: 1  ou  0,5  ou  30</string>
+-    <string name="field_duration">Duração do toque (ms) — 40 costuma bastar</string>
+-    <string name="field_poll">Verificar a cor a cada, em segundos</string>
+-    <string name="field_poll_hint">ex: 0,25</string>
+-    <string name="use_color">Só clicar quando a cor bater</string>
+-    <string name="field_tolerance">Tolerância de cor</string>
+-    <string name="save">Salvar</string>
+-    <string name="delete">Excluir</string>
+-    <string name="remark">Remarcar posição</string>
+-
+-    <string name="channel_overlay_name">Serviço do clicador</string>
+-    <string name="channel_capture_name">Leitura de cor da tela</string>
++    <!-- Step-by-step help shown before opening the Accessibility settings -->
++    <string name="a11y_help_title">How to enable the Accessibility permission</string>
++    <string name="a11y_help_body">Android will open the Accessibility settings. Do this:\n\n1. Find <b>AutoClique Live</b> in the list. On some phones it is under “Installed apps” or “Downloaded apps”.\n2. Tap it and switch it <b>on</b>.\n3. Confirm the warning Android shows and come back here.\n\nThis is AutoClique\'s own service, not TalkBack or the screen reader — you don\'t need to turn those on. The service only performs the taps you configured; it does not read the screen.\n\nTo pause everything quickly, use the notification or the floating button.</string>
++    <string name="a11y_help_open">Open settings</string>
++
++    <string name="bot_label">Selected bot</string>
++    <string name="bot_novo">+ New</string>
++    <string name="bot_renomear">Rename</string>
++    <string name="bot_excluir">Delete</string>
++    <string name="bot_nome_hint">Bot name (e.g. Shopee coins)</string>
++    <string name="bot_criar_titulo">New bot</string>
++    <string name="bot_renomear_titulo">Rename bot</string>
++    <string name="bot_excluir_titulo">Delete bot</string>
++    <string name="bot_excluir_msg">Delete the bot “%1$s” and its %2$d point(s)? This cannot be undone.</string>
++    <string name="bot_criado">Bot “%1$s” created. Add its points.</string>
++    <string name="bot_default_name">My first bot</string>
++    <string name="bot_new_name">New bot</string>
++    <string name="point_default_name">Point %1$d</string>
++
++    <string name="points_title">Points of this bot</string>
++    <string name="add_point">Add point</string>
++    <string name="empty_points">This bot has no points yet.\nTap “Add point”, drag the crosshair onto the claim button and confirm.</string>
++    <string name="edit">Edit</string>
++
++    <string name="start">Start</string>
++    <string name="stop">Stop</string>
++
++    <string name="picker_hint">Drag the crosshair onto the button</string>
++    <string name="pick_color">Save color</string>
++    <string name="confirm">Confirm</string>
++    <string name="cancel">Cancel</string>
++    <string name="picker_coords">x: %1$d   y: %2$d</string>
++
++    <string name="editor_title">Point settings</string>
++    <string name="field_name">Point name</string>
++    <string name="field_interval">Interval between taps, in seconds</string>
++    <string name="field_interval_hint">e.g. 1  or  0.5  or  30</string>
++    <string name="field_duration">Tap duration (ms) — 40 is usually enough</string>
++    <string name="field_poll">Check the color every, in seconds</string>
++    <string name="field_poll_hint">e.g. 0.25</string>
++    <string name="use_color">Tap only when the color matches</string>
++    <string name="field_tolerance">Color tolerance</string>
++    <string name="tolerance_value">%1$s: %2$d%%</string>
++    <string name="save">Save</string>
++    <string name="delete">Delete</string>
++    <string name="remark">Re-mark position</string>
++    <string name="editor_position">Position: x %1$d, y %2$d</string>
++    <string name="editor_color_saved">Saved color: %1$s</string>
++    <string name="editor_color_none">No color saved — use “Re-mark position”.</string>
++    <string name="editor_interval_invalid">Enter the interval in seconds, for example 1 or 0.5.</string>
++
++    <!-- List item details -->
++    <string name="detail_every">every %1$s s  -  %2$s/s</string>
++    <string name="detail_color">color %1$s (tol. %2$d%%)</string>
++    <string name="rate_per_second">%1$s taps per second</string>
++    <string name="rate_per_second_one">%1$s tap per second</string>
++
++    <!-- Toasts / engine messages -->
++    <string name="msg_find_in_list">Find “AutoClique Live” in the list and turn it on.</string>
++    <string name="msg_overlay_first">First allow “draw over other apps”.</string>
++    <string name="msg_open_target">Open the target app, drag the crosshair onto the button and confirm.</string>
++    <string name="msg_bot_no_points">The bot “%1$s” has no enabled points.</string>
++    <string name="msg_need_accessibility">Turn on AutoClique Live\'s Accessibility service so it can tap the screen.</string>
++    <string name="msg_need_overlay">Allow “draw over other apps” for the floating button.</string>
++    <string name="msg_need_capture">Allow screen capture — it is used only to check the button color.</string>
++    <string name="msg_started">Clicker on.</string>
++    <string name="msg_stopped">Clicker stopped.</string>
++    <string name="msg_a11y_off">The accessibility service was turned off. Clicker stopped.</string>
++    <string name="msg_rotated">Screen rotated: points paused until you return to the original orientation.</string>
++    <string name="msg_bubble_moved">Moved the bubble so it doesn\'t cover a tap point.</string>
++    <string name="msg_bubble_over_point">Warning: the bubble is over a tap point. Drag it somewhere else.</string>
++    <string name="msg_overlay_for_points">Allow “draw over other apps” to mark points.</string>
++    <string name="msg_capture_then_color">Allow screen capture and tap “Save color” again.</string>
++    <string name="msg_read_failed">Couldn\'t read the screen right now. Try again.</string>
++    <string name="msg_color_saved">Color saved.</string>
++
++    <!-- Notifications -->
++    <string name="notif_running">Tapping — %1$d tap(s) so far</string>
++    <string name="notif_idle">Stopped — tap the bubble to start</string>
++    <string name="notif_close">Close</string>
++    <string name="notif_capture">Reading the screen color for the color trigger</string>
++
++    <string name="channel_overlay_name">Clicker service</string>
++    <string name="channel_capture_name">Screen color reading</string>
+ </resources>
+diff --git a/build.gradle.kts b/build.gradle.kts
+index c7ad754..7b3ab7c 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -1,4 +1,4 @@
+ plugins {
+-    id("com.android.application") version "8.7.3" apply false
++    id("com.android.application") version "8.9.3" apply false
+     id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+ }
+diff --git a/gradle.properties b/gradle.properties
+index b6c763b..be2e4c9 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -30,5 +30,5 @@ kotlin.code.style=official
+ # ---------------------------------------------------------------- versao
+ # A Play Store exige um appVersionCode MAIOR a cada envio (nunca repete,
+ # nunca diminui). O appVersionName e o que o usuario ve na loja.
+-appVersionCode=1
+-appVersionName=1.0
++appVersionCode=2
++appVersionName=1.1
+-- 
+2.43.0
+
